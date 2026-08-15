@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Vim Dojo</title>
+    <style>
+      :root {
+        --accent: #2337ff;
+        --black: 15, 18, 25;
+        --gray: 96, 115, 159;
+        --gray-light: 229, 233, 240;
+        --gray-dark: 34, 41, 57;
+      }
+
+      body {
+        margin: 0;
+        color: rgb(var(--gray-dark));
+        font-family: system-ui, sans-serif;
+        font-size: 20px;
+        line-height: 1.7;
+      }
+
+      #app {
+        width: 100%;
+        max-width: 720px;
+        margin: auto;
+        padding: 2em 1em 3em;
+        box-sizing: border-box;
+      }
+
+      a {
+        color: var(--accent);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/demo.ts"></script>
+  </body>
+</html>

@@ -1,0 +1,429 @@
+import { history } from '@codemirror/commands';
+import { javascript } from '@codemirror/lang-javascript';
+import { EditorState } from '@codemirror/state';
+import { drawSelection, EditorView } from '@codemirror/view';
+import { getCM, vim, Vim } from '@replit/codemirror-vim';
+import { vimChallenges as defaultChallenges, type Challenge } from './challenges';
+import { classifyAttempt, methodLabel, type Method } from './classifier';
+import { isChallengeComplete } from './validator';
+import { vimDojoMarkup } from './template';
+import type { InteractionEvent, VimMode } from './telemetry';
+import './styles.css';
+
+export type MountVimDojoOptions = {
+  basePath?: string;
+  challenges?: Challenge[];
+};
+
+type VimState = {
+  visualMode?: boolean;
+  insertMode?: boolean;
+};
+
+export function mountVimDojo(root: HTMLElement, options: MountVimDojoOptions = {}): () => void {
+  const challenges = options.challenges ?? defaultChallenges;
+  const basePath = options.basePath ?? '/vim';
+
+  if (!root.querySelector('[data-vim-dojo]')) {
+    root.innerHTML = vimDojoMarkup;
+  }
+
+  const dojo = root.querySelector<HTMLElement>('[data-vim-dojo]');
+  const editorParent = dojo?.querySelector<HTMLElement>('[data-editor]');
+
+  const els = {
+    shell: dojo?.querySelector<HTMLElement>('[data-state]'),
+    count: dojo?.querySelector<HTMLElement>('[data-challenge-count]'),
+    category: dojo?.querySelector<HTMLElement>('[data-category]'),
+    title: dojo?.querySelector<HTMLElement>('[data-title]'),
+    description: dojo?.querySelector<HTMLElement>('[data-description]'),
+    feedback: dojo?.querySelector<HTMLElement>('[data-feedback]'),
+    resultTitle: dojo?.querySelector<HTMLElement>('[data-result-title]'),
+    resultMessage: dojo?.querySelector<HTMLElement>('[data-result-message]'),
+    method: dojo?.querySelector<HTMLElement>('[data-method]'),
+    keystrokes: dojo?.querySelector<HTMLElement>('[data-keystrokes]'),
+    time: dojo?.querySelector<HTMLElement>('[data-time]'),
+    hint: dojo?.querySelector<HTMLElement>('[data-hint]'),
+    hintButton: dojo?.querySelector<HTMLButtonElement>('[data-hint-button]'),
+    retryButton: dojo?.querySelector<HTMLButtonElement>('[data-retry-button]'),
+    nextButton: dojo?.querySelector<HTMLButtonElement>('[data-next-button]'),
+    resetButton: dojo?.querySelector<HTMLButtonElement>('[data-reset-button]'),
+    autoContinue: dojo?.querySelector<HTMLElement>('[data-auto-continue]'),
+    autoContinueLabel: dojo?.querySelector<HTMLElement>('[data-auto-continue-label]'),
+    progress: dojo?.querySelector<HTMLElement>('[data-progress]'),
+    mode: dojo?.querySelector<HTMLElement>('[data-mode]'),
+    error: dojo?.querySelector<HTMLElement>('[data-error]'),
+  };
+
+  const AUTO_CONTINUE_MS = 5000;
+
+  let challengeIndex = getInitialChallengeIndex();
+  let view: EditorView | undefined;
+  let events: InteractionEvent[] = [];
+  let startedAt: number | null = null;
+  let completedAt: number | null = null;
+  let completed = false;
+  let hintIndex = 0;
+  let currentMode: VimMode = 'normal';
+  let isMouseSelecting = false;
+  let autoContinueTimer: ReturnType<typeof setTimeout> | null = null;
+  let autoContinueTicker: ReturnType<typeof setInterval> | null = null;
+  let autoContinueDeadline: number | null = null;
+
+  function challengeIndexById(id: string | null): number {
+    if (!id) return -1;
+    return challenges.findIndex((challenge) => challenge.id === id);
+  }
+
+  function getInitialChallengeIndex(): number {
+    const fromQuery = new URLSearchParams(window.location.search).get('challenge');
+    const queryIndex = challengeIndexById(fromQuery);
+    if (queryIndex >= 0) return queryIndex;
+
+    try {
+      const storedIndex = challengeIndexById(window.localStorage.getItem('vim-dojo:lastChallenge'));
+      if (storedIndex >= 0) return storedIndex;
+    } catch {
+      // localStorage may be unavailable in private browsing modes.
+    }
+
+    return 0;
+  }
+
+  function readCompletedIds(): string[] {
+    try {
+      const parsed = JSON.parse(window.localStorage.getItem('vim-dojo:completed') ?? '[]');
+      return Array.isArray(parsed) ? parsed.filter((id) => typeof id === 'string') : [];
+    } catch {
+      return [];
+    }
+  }
+
+  function completedCount(): number {
+    const known = new Set(challenges.map((challenge) => challenge.id));
+    return readCompletedIds().filter((id) => known.has(id)).length;
+  }
+
+  function twoDigit(value: number): string {
+    return String(value + 1).padStart(2, '0');
+  }
+
+  function currentChallenge(): Challenge {
+    return challenges[challengeIndex] ?? challenges[0];
+  }
+
+  function setText(element: Element | null | undefined, text: string): void {
+    if (element) element.textContent = text;
+  }
+
+  function modeFromView(): VimMode {
+    const cm = view ? getCM(view) : null;
+    const vimState = cm?.state?.vim as VimState | undefined;
+    if (vimState?.visualMode) return 'visual';
+    if (vimState?.insertMode) return 'insert';
+    return 'normal';
+  }
+
+  function record(event: InteractionEvent): void {
+    if (!startedAt) startedAt = performance.now();
+    events.push({ ...event, t: performance.now() });
+  }
+
+  function updateMode(): void {
+    const nextMode = modeFromView();
+    if (nextMode !== currentMode) {
+      record({ type: 'mode-change', from: currentMode, to: nextMode, t: 0 });
+      currentMode = nextMode;
+      setText(els.mode, `${nextMode[0].toUpperCase()}${nextMode.slice(1)}`);
+    }
+  }
+
+  function contentOffset(position: { line: number; column: number }, doc: EditorView['state']['doc']): number {
+    const line = doc.line(Math.min(position.line + 1, doc.lines));
+    return Math.min(line.from + position.column, line.to);
+  }
+
+  function setInitialCursor(challenge: Challenge): void {
+    if (!challenge.initialCursor || !view) return;
+    const cursor = contentOffset(challenge.initialCursor, view.state.doc);
+    view.dispatch({ selection: { anchor: cursor } });
+  }
+
+  function forceNormalMode(): void {
+    const cm = view ? getCM(view) : null;
+    if (cm) {
+      const vimState = cm.state?.vim as VimState | undefined;
+      if (vimState?.insertMode) Vim.exitInsertMode(cm as never);
+      if (vimState?.visualMode) Vim.exitVisualMode(cm as never);
+      Vim.handleKey(cm, '<Esc>', 'user');
+    }
+
+    currentMode = 'normal';
+    setText(els.mode, 'Normal');
+  }
+
+  function resetTelemetry(): void {
+    events = [];
+    startedAt = null;
+    completedAt = null;
+    completed = false;
+    hintIndex = 0;
+    currentMode = 'normal';
+    setText(els.mode, 'Normal');
+  }
+
+  function remainingAutoContinueSeconds(): number {
+    if (autoContinueDeadline == null) return 0;
+    return Math.max(0, Math.ceil((autoContinueDeadline - performance.now()) / 1000));
+  }
+
+  function updateAutoContinueVisual(): void {
+    const seconds = remainingAutoContinueSeconds();
+    setText(els.autoContinueLabel, `Continuing in ${seconds}s`);
+  }
+
+  function cancelAutoContinue(): void {
+    if (autoContinueTimer != null) {
+      clearTimeout(autoContinueTimer);
+      autoContinueTimer = null;
+    }
+    if (autoContinueTicker != null) {
+      clearInterval(autoContinueTicker);
+      autoContinueTicker = null;
+    }
+    autoContinueDeadline = null;
+    els.autoContinue?.setAttribute('hidden', '');
+    setText(els.autoContinueLabel, '');
+  }
+
+  function goToNext(): void {
+    if (challengeIndex >= challenges.length - 1) return;
+    challengeIndex += 1;
+    renderChallenge();
+  }
+
+  function resetSession(): void {
+    challengeIndex = 0;
+    renderChallenge();
+  }
+
+  function startAutoContinue(): void {
+    cancelAutoContinue();
+    if (challengeIndex >= challenges.length - 1) return;
+
+    autoContinueDeadline = performance.now() + AUTO_CONTINUE_MS;
+    els.autoContinue?.removeAttribute('hidden');
+    updateAutoContinueVisual();
+
+    autoContinueTicker = setInterval(updateAutoContinueVisual, 200);
+    autoContinueTimer = setTimeout(goToNext, AUTO_CONTINUE_MS);
+  }
+
+  function progressLabel(): string {
+    const total = String(challenges.length).padStart(2, '0');
+    const done = completedCount();
+    const base = `${twoDigit(challengeIndex)} / ${total}`;
+    return done > 0 ? `${base} · ${done} done` : base;
+  }
+
+  function replaceDocument(doc: string): void {
+    if (!view) return;
+    view.dispatch({
+      changes: { from: 0, to: view.state.doc.length, insert: doc },
+    });
+  }
+
+  function challengeUrl(id: string): string {
+    const path = basePath.endsWith('/') && basePath.length > 1 ? basePath.slice(0, -1) : basePath;
+    return `${path || '/'}?challenge=${id}`;
+  }
+
+  function renderChallenge(): void {
+    const challenge = currentChallenge();
+    cancelAutoContinue();
+    forceNormalMode();
+    resetTelemetry();
+
+    setText(els.count, `Challenge ${twoDigit(challengeIndex)}`);
+    setText(els.category, `${challenge.category} / ${challenge.difficulty}`);
+    setText(els.title, challenge.title);
+    setText(els.description, challenge.description);
+    setText(els.progress, progressLabel());
+    setText(els.hint, '');
+    setText(els.nextButton, 'Next');
+    els.hint?.setAttribute('hidden', '');
+    els.feedback?.setAttribute('hidden', '');
+    els.nextButton?.toggleAttribute('disabled', challengeIndex === challenges.length - 1);
+    els.hintButton?.removeAttribute('disabled');
+
+    if (view) {
+      replaceDocument(challenge.initialContent);
+      setInitialCursor(challenge);
+      view.focus();
+    }
+
+    window.history.replaceState(null, '', challengeUrl(challenge.id));
+    try {
+      window.localStorage.setItem('vim-dojo:lastChallenge', challenge.id);
+    } catch {
+      // localStorage may be unavailable in private browsing modes.
+    }
+  }
+
+  function renderHint(): void {
+    const challenge = currentChallenge();
+    if (!challenge.hints?.length) return;
+
+    const hint = challenge.hints[Math.min(hintIndex, challenge.hints.length - 1)];
+    setText(els.hint, hint ?? '');
+    els.hint?.removeAttribute('hidden');
+    hintIndex += 1;
+
+    if (hintIndex >= challenge.hints.length) {
+      els.hintButton?.setAttribute('disabled', '');
+    }
+
+    view?.focus();
+  }
+
+  function completionMessage(method: Method, challenge: Challenge): string {
+    if (method === 'paste') return 'You pasted the solution. Nothing wrong with that, but this dojo is for practicing Vim.';
+    if (method === 'manual' || method === 'mixed') return 'You solved it, but you missed some Vim practice.';
+    if (method === 'mostly-vim') return 'Solved. One mouse interaction nudged this into mostly Vim.';
+    return challenge.intendedMove ? `${challenge.intendedMove} was the intended move.` : 'Nice.';
+  }
+
+  function completeChallenge(): void {
+    if (completed) return;
+
+    const challenge = currentChallenge();
+    completed = true;
+    completedAt = performance.now();
+    const method = classifyAttempt(events, challenge.initialContent, challenge.targetContent);
+    const seconds = ((completedAt - (startedAt ?? completedAt)) / 1000).toFixed(2);
+    const keyEvents = events.filter((event) => event.type === 'key').length;
+
+    setText(els.resultTitle, 'Completed');
+    setText(els.resultMessage, completionMessage(method, challenge));
+    setText(els.method, `Method: ${methodLabel(method)}`);
+    setText(els.keystrokes, `${keyEvents} keystrokes`);
+    setText(els.time, `${seconds}s`);
+    els.feedback?.removeAttribute('hidden');
+
+    if (challengeIndex === challenges.length - 1) {
+      setText(els.nextButton, 'Set complete');
+      els.nextButton?.setAttribute('disabled', '');
+    } else {
+      startAutoContinue();
+    }
+
+    try {
+      window.localStorage.setItem(
+        'vim-dojo:completed',
+        JSON.stringify(Array.from(new Set([...readCompletedIds(), challenge.id]))),
+      );
+    } catch {
+      // Progress persistence is optional for the MVP.
+    }
+
+    setText(els.progress, progressLabel());
+  }
+
+  function onEditorUpdate(update: { docChanged: boolean; state: { doc: { toString(): string } } }): void {
+    updateMode();
+    if (!update.docChanged) return;
+
+    const challenge = currentChallenge();
+    if (isChallengeComplete(update.state.doc.toString(), challenge.targetContent)) {
+      completeChallenge();
+    }
+  }
+
+  function createEditor(): void {
+    if (!editorParent) throw new Error('Missing Vim Dojo editor');
+
+    const challenge = currentChallenge();
+
+    view = new EditorView({
+      state: EditorState.create({
+        doc: challenge.initialContent,
+        extensions: [
+          vim(),
+          history(),
+          drawSelection(),
+          javascript(),
+          EditorView.lineWrapping,
+          EditorView.updateListener.of(onEditorUpdate),
+        ],
+      }),
+      parent: editorParent,
+    });
+
+    editorParent.addEventListener('keydown', (event) => {
+      record({ type: 'key', key: event.key, mode: currentMode, t: 0 });
+      const key = event.key.toLowerCase();
+      if ((event.metaKey || event.ctrlKey) && key === 'z') {
+        record({ type: event.shiftKey ? 'redo' : 'undo', t: 0 });
+      }
+      if ((event.metaKey || event.ctrlKey) && key === 'y') record({ type: 'redo', t: 0 });
+      queueMicrotask(updateMode);
+    });
+
+    editorParent.addEventListener(
+      'mousedown',
+      () => {
+        const alreadyFocused = Boolean(view?.hasFocus);
+        isMouseSelecting = true;
+        if (alreadyFocused) record({ type: 'mouse-down', t: 0 });
+      },
+      true,
+    );
+
+    window.addEventListener('mouseup', onWindowMouseUp);
+
+    editorParent.addEventListener('paste', (event) => {
+      const text = event.clipboardData?.getData('text') ?? '';
+      record({ type: 'paste', length: text.length, t: 0 });
+    });
+
+    setInitialCursor(challenge);
+    view.focus();
+  }
+
+  function onWindowMouseUp(): void {
+    if (!isMouseSelecting || !view) return;
+    isMouseSelecting = false;
+    const selectionLength = view.state.selection.ranges.reduce(
+      (total, range) => total + Math.abs(range.to - range.from),
+      0,
+    );
+    if (selectionLength > 0) record({ type: 'mouse-selection', length: selectionLength, t: 0 });
+  }
+
+  function unmount(): void {
+    cancelAutoContinue();
+    window.removeEventListener('mouseup', onWindowMouseUp);
+    view?.destroy();
+    view = undefined;
+    root.replaceChildren();
+  }
+
+  try {
+    if (!dojo || !editorParent) throw new Error('Missing Vim Dojo root');
+
+    createEditor();
+    renderChallenge();
+    els.shell?.setAttribute('data-state', 'ready');
+
+    els.hintButton?.addEventListener('click', renderHint);
+    els.retryButton?.addEventListener('click', renderChallenge);
+    els.nextButton?.addEventListener('click', goToNext);
+    els.resetButton?.addEventListener('click', resetSession);
+  } catch (error) {
+    console.error(error);
+    els.error?.removeAttribute('hidden');
+    els.shell?.setAttribute('data-state', 'error');
+  }
+
+  return unmount;
+}
