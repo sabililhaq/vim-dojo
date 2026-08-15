@@ -26,4 +26,30 @@ export const visualChallenges: Challenge[] = [
     ],
     intendedMove: 'vec',
   },
+  {
+    id: 'visual-02',
+    title: 'Delete a visual line',
+    description: 'Visually select the deprecated comment and delete it.',
+    category: 'visual',
+    difficulty: 'medium',
+    initialContent: [
+      'function start() {',
+      '  // deprecated path',
+      '  return boot();',
+      '}',
+    ].join('\n'),
+    targetContent: [
+      'function start() {',
+      '  return boot();',
+      '}',
+    ].join('\n'),
+    initialCursor: { line: 1, column: 2 },
+    concepts: ['V', 'd'],
+    hints: [
+      'The whole current line should go away.',
+      'Enter Visual-Line mode, then delete the selection.',
+      'Try `Vd`.',
+    ],
+    intendedMove: 'Vd',
+  },
 ];

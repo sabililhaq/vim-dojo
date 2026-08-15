@@ -110,4 +110,16 @@ describe('Vim Dojo', () => {
     expect(visual?.intendedMove).toBe('vec');
     expect(visual?.targetContent).toContain('runJob');
   });
+
+  it('keeps intended moves for the new practice cases', () => {
+    const byId = Object.fromEntries(vimChallenges.map((challenge) => [challenge.id, challenge]));
+
+    expect(byId['motion-03']?.intendedMove).toBe('fecw');
+    expect(byId['motion-03']?.targetContent).toContain('disabled');
+    expect(byId['motion-04']?.intendedMove).toBe('wcw');
+    expect(byId['operator-03']?.intendedMove).toBe('dw');
+    expect(byId['operator-04']?.intendedMove).toBe('dW');
+    expect(byId['text-object-04']?.intendedMove).toBe('ci{');
+    expect(byId['visual-02']?.intendedMove).toBe('Vd');
+  });
 });

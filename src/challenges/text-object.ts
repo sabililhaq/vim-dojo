@@ -52,4 +52,21 @@ export const textObjectChallenges: Challenge[] = [
     ],
     intendedMove: 'ciw',
   },
+  {
+    id: 'text-object-04',
+    title: 'Change a block',
+    description: 'Replace the if-body with return null.',
+    category: 'text-object',
+    difficulty: 'easy',
+    initialContent: 'if (!user) { throw new Error("missing"); }',
+    targetContent: 'if (!user) { return null; }',
+    initialCursor: { line: 0, column: 13 },
+    concepts: ['ci{', 'text-object'],
+    hints: [
+      'The body you need to replace is inside the braces.',
+      'Change the contents inside the curly braces.',
+      'Try `ci{` then ` return null; `.',
+    ],
+    intendedMove: 'ci{',
+  },
 ];
