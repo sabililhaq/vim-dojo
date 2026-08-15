@@ -1,0 +1,62 @@
+name: New challenge
+description: Propose a Vim practice case
+title: 'challenge: '
+labels: [challenge]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The fastest path is a pull request that appends a case under `src/challenges/`.
+        Use this issue if you want feedback before writing it.
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      options:
+        - motion
+        - operator
+        - text-object
+        - visual
+        - other (describe below)
+    validations:
+      required: true
+  - type: input
+    id: title
+    attributes:
+      label: Title
+      placeholder: Delete a log line
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: What should the user do?
+      placeholder: Delete the console.log statement.
+    validations:
+      required: true
+  - type: textarea
+    id: initial
+    attributes:
+      label: Initial text
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: target
+    attributes:
+      label: Target text
+      render: text
+    validations:
+      required: true
+  - type: input
+    id: intended
+    attributes:
+      label: Intended Vim keys
+      placeholder: dd
+    validations:
+      required: true
+  - type: input
+    id: cursor
+    attributes:
+      label: Starting cursor (line, column)
+      placeholder: '1, 0'

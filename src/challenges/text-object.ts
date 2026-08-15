@@ -1,0 +1,55 @@
+import type { Challenge } from './types';
+
+export const textObjectChallenges: Challenge[] = [
+  {
+    id: 'text-object-01',
+    title: 'Change quoted text',
+    description: 'Change "production" to "staging".',
+    category: 'text-object',
+    difficulty: 'easy',
+    initialContent: 'const environment = "production";',
+    targetContent: 'const environment = "staging";',
+    initialCursor: { line: 0, column: 22 },
+    concepts: ['change', 'text-object', 'quote'],
+    hints: [
+      'Think about text objects.',
+      'Change the contents inside the quotes.',
+      'Try `ci"`.',
+    ],
+    intendedMove: 'ci"',
+  },
+  {
+    id: 'text-object-02',
+    title: 'Clear arguments',
+    description: 'Remove all arguments from the function call.',
+    category: 'text-object',
+    difficulty: 'easy',
+    initialContent: 'calculatePrice(basePrice, tax, discount)',
+    targetContent: 'calculatePrice()',
+    initialCursor: { line: 0, column: 21 },
+    concepts: ['change', 'text-object', 'parentheses'],
+    hints: [
+      'The arguments are inside parentheses.',
+      'Change the inside of the parentheses to nothing.',
+      'Try `ci(`.',
+    ],
+    intendedMove: 'ci(',
+  },
+  {
+    id: 'text-object-03',
+    title: 'Replace an object value',
+    description: 'Change the timeout value to 5000.',
+    category: 'text-object',
+    difficulty: 'easy',
+    initialContent: 'const options = { timeout: 3000, retries: 2 };',
+    targetContent: 'const options = { timeout: 5000, retries: 2 };',
+    initialCursor: { line: 0, column: 28 },
+    concepts: ['change', 'word'],
+    hints: [
+      'The cursor starts on the value to replace.',
+      'Change the current word or number.',
+      'Try `ciw5000`.',
+    ],
+    intendedMove: 'ciw',
+  },
+];

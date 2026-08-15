@@ -35,7 +35,7 @@
     "practice",
     "codemirror"
   ],
-  "author": "sabililhaq",
+  "author": "Vim Dojo contributors",
   "license": "MIT",
   "dependencies": {
     "@codemirror/commands": "^6.10.4",

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { vimChallenges } from '../src/challenges';
+import { challengeSets, vimChallenges } from '../src/challenges';
 import { classifyAttempt } from '../src/classifier';
 import { contentDiffSize, isChallengeComplete } from '../src/validator';
 import type { InteractionEvent } from '../src/telemetry';
@@ -11,13 +11,29 @@ const templatePath = fileURLToPath(new URL('../src/template.ts', import.meta.url
 const stylesPath = fileURLToPath(new URL('../src/styles.css', import.meta.url));
 
 describe('Vim Dojo', () => {
-  it('ships the Phase 0 challenge set from the spec', () => {
-    expect(vimChallenges).toHaveLength(8);
-    expect(vimChallenges.filter((challenge) => challenge.category === 'motion')).toHaveLength(2);
-    expect(vimChallenges.filter((challenge) => challenge.category === 'operator')).toHaveLength(2);
-    expect(vimChallenges.filter((challenge) => challenge.category === 'text-object')).toHaveLength(3);
-    expect(vimChallenges.filter((challenge) => challenge.category === 'visual')).toHaveLength(1);
-    expect(vimChallenges.every((challenge) => challenge.hints && challenge.hints.length > 0)).toBe(true);
+  it('keeps every challenge complete, unique, and in its category set', () => {
+    const ids = vimChallenges.map((challenge) => challenge.id);
+
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(vimChallenges.length).toBeGreaterThan(0);
+
+    for (const challenge of vimChallenges) {
+      expect(challenge.id.startsWith(`${challenge.category}-`)).toBe(true);
+      expect(challenge.title.length).toBeGreaterThan(0);
+      expect(challenge.description.length).toBeGreaterThan(0);
+      expect(challenge.initialContent).not.toBe(challenge.targetContent);
+      expect(challenge.hints?.length).toBeGreaterThan(0);
+      expect(challenge.intendedMove).toBeTruthy();
+    }
+
+    for (const [category, set] of Object.entries(challengeSets)) {
+      expect(set.length).toBeGreaterThan(0);
+      expect(set.every((challenge) => challenge.category === category)).toBe(true);
+    }
+
+    expect(vimChallenges).toHaveLength(
+      Object.values(challengeSets).reduce((total, set) => total + set.length, 0),
+    );
   });
 
   it('initializes CodeMirror with the Replit Vim extension', () => {
