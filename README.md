@@ -36,5 +36,5 @@ mountVimDojo(document.querySelector('#dojo'), {
 The host can theme it with `--accent`, `--black`, `--gray`, `--gray-light`, and `--gray-dark`.
 
 ```json
-"vim-dojo": "github:sabililhaq/vim-dojo#v0.1.0"
+"vim-dojo": "github:sabililhaq/vim-dojo#v0.1.1"
 ```
