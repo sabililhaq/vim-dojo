@@ -4,6 +4,8 @@
   --vd-gray: var(--gray, 96 115 159);
   --vd-gray-light: var(--gray-light, 229 233 240);
   --vd-gray-dark: var(--gray-dark, 34 41 57);
+  --vd-bg: var(--bg, 255 255 255);
+  --vd-surface: var(--surface, var(--bg, 255 255 255));
   display: flex;
   flex-direction: column;
   gap: 1.75rem;
@@ -73,13 +75,30 @@
   border: 1px solid rgb(var(--vd-gray-light));
   border-radius: 6px;
   overflow: hidden;
-  background: #fff;
+  background: rgb(var(--vd-surface));
+}
+
+.vim-dojo .editor-wrap .cm-editor,
+.vim-dojo .editor-wrap .cm-scroller,
+.vim-dojo .editor-wrap .cm-content {
+  background: rgb(var(--vd-surface));
+  color: rgb(var(--vd-gray-dark));
+  caret-color: rgb(var(--vd-black));
 }
 
 .vim-dojo .editor-wrap .cm-editor {
   min-height: 7rem;
   font-size: 0.9rem;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+}
+
+.vim-dojo .editor-wrap .cm-cursor {
+  border-left-color: rgb(var(--vd-black));
+}
+
+.vim-dojo .editor-wrap .cm-selectionBackground,
+.vim-dojo .editor-wrap .cm-content ::selection {
+  background: color-mix(in srgb, var(--vd-accent) 30%, transparent);
 }
 
 .vim-dojo .editor-wrap .cm-content {
@@ -171,7 +190,7 @@
   background: rgb(var(--vd-black));
   border: 1px solid rgb(var(--vd-black));
   border-radius: 6px;
-  color: #fff;
+  color: rgb(var(--vd-bg));
   cursor: pointer;
   font: inherit;
   font-size: 0.86rem;
@@ -187,14 +206,14 @@
 }
 
 .vim-dojo .actions button.secondary {
-  background: #fff;
+  background: rgb(var(--vd-surface));
   border-color: rgb(var(--vd-gray-light));
   color: rgb(var(--vd-black));
 }
 
 .vim-dojo .actions button.secondary:hover,
 .vim-dojo .actions button.secondary:focus-visible {
-  background: #fff;
+  background: rgb(var(--vd-surface));
   border-color: var(--vd-accent);
   color: var(--vd-accent);
 }

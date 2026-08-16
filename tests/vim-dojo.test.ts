@@ -47,6 +47,17 @@ describe('Vim Dojo', () => {
     expect(source).toContain("localStorage.getItem('vim-dojo:lastChallenge')");
   });
 
+  it('themes editor and buttons from host surface tokens instead of hardcoded white', () => {
+    const styles = readFileSync(stylesPath, 'utf-8');
+
+    expect(styles).toContain('--vd-bg: var(--bg, 255 255 255)');
+    expect(styles).toContain('--vd-surface: var(--surface, var(--bg, 255 255 255))');
+    expect(styles).toContain('background: rgb(var(--vd-surface))');
+    expect(styles).toContain('color: rgb(var(--vd-bg))');
+    expect(styles).not.toMatch(/background:\s*#fff/);
+    expect(styles).not.toMatch(/color:\s*#fff/);
+  });
+
   it('resets the session to the first challenge and auto-continues after 5s', () => {
     const source = readFileSync(mountPath, 'utf-8');
     const template = readFileSync(templatePath, 'utf-8');
