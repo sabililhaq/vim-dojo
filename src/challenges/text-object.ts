@@ -69,4 +69,21 @@ export const textObjectChallenges: Challenge[] = [
     ],
     intendedMove: 'ci{',
   },
+  {
+    id: 'text-object-05',
+    title: 'Delete a word from inside',
+    description: 'Remove unused even though the cursor is in the middle of it.',
+    category: 'text-object',
+    difficulty: 'easy',
+    initialContent: 'return unused result;',
+    targetContent: 'return result;',
+    initialCursor: { line: 0, column: 9 },
+    concepts: ['daw', 'text-object'],
+    hints: [
+      'The cursor starts in the middle of the extra word.',
+      '`dw` from here would leave a prefix behind. Delete a whole word.',
+      'Try `daw`.',
+    ],
+    intendedMove: 'daw',
+  },
 ];

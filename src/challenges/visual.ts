@@ -52,4 +52,21 @@ export const visualChallenges: Challenge[] = [
     ],
     intendedMove: 'Vd',
   },
+  {
+    id: 'visual-03',
+    title: 'Change inside quotes visually',
+    description: 'Select the quoted text visually, then change it to staging.',
+    category: 'visual',
+    difficulty: 'medium',
+    initialContent: 'const environment = "production";',
+    targetContent: 'const environment = "staging";',
+    initialCursor: { line: 0, column: 22 },
+    concepts: ['v', 'i"', 'c'],
+    hints: [
+      'The cursor starts inside the quotes.',
+      'Visually select the inner quoted text, then change it.',
+      'Try `vi"cstaging`.',
+    ],
+    intendedMove: 'vi"c',
+  },
 ];
