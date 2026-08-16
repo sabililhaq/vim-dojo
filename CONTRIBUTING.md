@@ -59,4 +59,4 @@ Open the new case with `?challenge=motion-03` and solve it with the intended mov
 
 One challenge per PR is easiest to review. Use the pull request checklist.
 
-Engine or UI changes are welcome after a challenge contribution, or in a separate PR. Keep the dojo a practice tool: no accounts, leaderboards, or skill trees.
+Engine or UI changes are welcome after a challenge contribution, or in a separate PR. Keep the dojo a practice tool: no accounts, leaderboards, or skill trees. See [ROADMAP.md](ROADMAP.md) before adding modes (category, random, daily) or interactive hints.

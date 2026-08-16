@@ -4,6 +4,8 @@ Practice Vim. Don't learn Vim.
 
 A browser playground for building muscle memory on ordinary editing tasks. It is not a beginner tutorial. New to Vim? Start with [VimHero Basic Movement](https://www.vim-hero.com/lessons/basic-movement).
 
+[ROADMAP.md](ROADMAP.md) is the learning plan: category play, random review, a daily kata, and interactive hints on top of the text hints that already ship.
+
 ## Add a challenge
 
 This project grows when people add realistic cases.

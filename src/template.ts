@@ -1,20 +1,5 @@
 export const vimDojoMarkup = `
 <section class="vim-dojo" data-vim-dojo>
-  <div class="intro">
-    <h1>Vim Dojo</h1>
-    <p class="tagline">Practice Vim. Don't learn Vim.</p>
-    <p>
-      This is not a beginner Vim tutorial. You should already know Normal mode,
-      Insert mode, motions, operators, and common commands.
-    </p>
-    <p class="beginner-link">
-      New to Vim?
-      <a href="https://www.vim-hero.com/lessons/basic-movement" target="_blank" rel="noopener noreferrer">
-        VimHero Basic Movement
-      </a>
-    </p>
-  </div>
-
   <div class="challenge-shell" data-state="loading">
     <div class="challenge-meta">
       <span data-challenge-count>Challenge 01</span>
@@ -59,6 +44,21 @@ export const vimDojoMarkup = `
       <span data-progress>01 / 08</span>
       <span data-mode>Normal</span>
     </div>
+  </div>
+
+  <div class="intro">
+    <h1>Vim Dojo</h1>
+    <p class="tagline">Practice Vim. Don't learn Vim.</p>
+    <p>
+      This is not a beginner Vim tutorial. You should already know Normal mode,
+      Insert mode, motions, operators, and common commands.
+    </p>
+    <p class="beginner-link">
+      New to Vim?
+      <a href="https://www.vim-hero.com/lessons/basic-movement" target="_blank" rel="noopener noreferrer">
+        VimHero Basic Movement
+      </a>
+    </p>
   </div>
 </section>
 `.trim();

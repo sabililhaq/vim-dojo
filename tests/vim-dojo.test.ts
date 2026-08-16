@@ -237,6 +237,14 @@ describe('Vim Dojo learning', () => {
     }
   });
 
+  it('puts the challenge above the intro so practice is the first thing on the page', () => {
+    const template = readFileSync(templatePath, 'utf-8');
+    const styles = readFileSync(stylesPath, 'utf-8');
+
+    expect(template.indexOf('challenge-shell')).toBeLessThan(template.indexOf('class="intro"'));
+    expect(styles).toContain('.vim-dojo .intro {\n  border-top: 1px solid rgb(var(--vd-gray-light));');
+  });
+
   it('points beginners to VimHero and exposes a hint button', () => {
     const template = readFileSync(templatePath, 'utf-8');
     const source = readFileSync(mountPath, 'utf-8');
@@ -260,6 +268,28 @@ describe('Vim Dojo learning', () => {
     expect(challenge?.initialCursor?.column).toBeGreaterThan(unusedAt);
     expect(challenge?.initialCursor?.column).toBeLessThan(unusedAt + 'unused'.length);
     expect(challenge?.concepts).toContain('daw');
+  });
+
+  it('publishes a learning roadmap for category, random, daily, and interactive hints', () => {
+    const readmePath = fileURLToPath(new URL('../README.md', import.meta.url));
+    const roadmapPath = fileURLToPath(new URL('../ROADMAP.md', import.meta.url));
+    const contributingPath = fileURLToPath(new URL('../CONTRIBUTING.md', import.meta.url));
+    const readme = readFileSync(readmePath, 'utf-8');
+    const roadmap = readFileSync(roadmapPath, 'utf-8');
+    const contributing = readFileSync(contributingPath, 'utf-8');
+
+    expect(readme).toContain('[ROADMAP.md](ROADMAP.md)');
+    expect(contributing).toContain('ROADMAP.md');
+    expect(roadmap).toMatch(/learning tool/i);
+    expect(roadmap).toMatch(/Play by category/);
+    expect(roadmap).toMatch(/Randomized practice/);
+    expect(roadmap).toMatch(/Daily kata/);
+    expect(roadmap).toMatch(/Interactive hints/);
+    expect(roadmap).toContain('?category=');
+    expect(roadmap).toContain('?mode=random');
+    expect(roadmap).toContain('?mode=daily');
+    expect(roadmap).toMatch(/Ghost the next character/);
+    expect(roadmap).toMatch(/No accounts/);
   });
 
   it('pairs change-till with a visual inner-quote case', () => {
