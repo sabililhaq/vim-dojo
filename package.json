@@ -1,6 +1,6 @@
 {
   "name": "vim-dojo",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Practice Vim. Don't learn Vim.",
   "type": "module",
   "sideEffects": [
