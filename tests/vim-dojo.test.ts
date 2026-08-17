@@ -117,6 +117,22 @@ describe('Vim Dojo', () => {
     expect(classifyAttempt(pasteEvents, 'const x = "old";', 'const x = "new";')).toBe('paste');
   });
 
+  it('does not treat a tiny paste as the whole solution', () => {
+    const events: InteractionEvent[] = [
+      { type: 'key', key: 'c', mode: 'normal', t: 1 },
+      { type: 'key', key: 'w', mode: 'normal', t: 2 },
+      { type: 'paste', length: 1, t: 3 },
+    ];
+
+    expect(classifyAttempt(events, 'const x = "oldvalue";', 'const x = "newvalue";')).toBe('vim');
+  });
+
+  it('treats blank and whitespace-only buffers as the same empty solution', () => {
+    expect(isChallengeComplete('  \n', '')).toBe(true);
+    expect(isChallengeComplete('', 'x')).toBe(false);
+    expect(contentDiffSize('same', 'same')).toBe(1);
+  });
+
   it('classifies a single click as mostly-vim and extra mouse work as mixed', () => {
     const mostlyVimEvents: InteractionEvent[] = [
       { type: 'mouse-down', t: 1 },
@@ -175,14 +191,20 @@ describe('Vim Dojo', () => {
     expect(byId['motion-04']?.intendedMove).toBe('wcw');
     expect(byId['motion-05']?.intendedMove).toBe('bcw');
     expect(byId['motion-06']?.intendedMove).toBe('ct-');
+    expect(byId['motion-07']?.intendedMove).toBe('Ftcw');
+    expect(byId['motion-08']?.intendedMove).toBe('ea');
     expect(byId['operator-03']?.intendedMove).toBe('dw');
     expect(byId['operator-04']?.intendedMove).toBe('dW');
     expect(byId['operator-05']?.intendedMove).toBe('x');
     expect(byId['operator-06']?.intendedMove).toBe('D');
+    expect(byId['operator-07']?.intendedMove).toBe('C');
+    expect(byId['operator-08']?.intendedMove).toBe('dt"');
     expect(byId['text-object-04']?.intendedMove).toBe('ci{');
     expect(byId['text-object-05']?.intendedMove).toBe('daw');
+    expect(byId['text-object-06']?.intendedMove).toBe('ca"');
     expect(byId['visual-02']?.intendedMove).toBe('Vd');
     expect(byId['visual-03']?.intendedMove).toBe('vi"c');
+    expect(byId['visual-04']?.intendedMove).toBe('viwc');
   });
 });
 
@@ -207,16 +229,22 @@ describe('Vim Dojo learning', () => {
     const concepts = vimChallenges.flatMap((challenge) => challenge.concepts ?? []);
     const practiced = [...intended, ...concepts].join(' ');
 
-    for (const key of ['0', '$', 'w', 'b', 'f', 't', 'x', 'D', 'dd', 'dw', 'cw', 'dW', 'ci"', 'ci(', 'ciw', 'ci{', 'daw', 'v', 'V']) {
+    for (const key of ['0', '$', 'w', 'b', 'e', 'f', 'F', 't', 'x', 'C', 'D', 'dd', 'dw', 'cw', 'dW', 'dt', 'ci"', 'ci(', 'ciw', 'ci{', 'ca"', 'daw', 'v', 'V', 'iw']) {
       expect(practiced, key).toContain(key);
     }
 
     expect(challengeSets.motion.some((challenge) => challenge.intendedMove?.includes('b'))).toBe(true);
     expect(challengeSets.motion.some((challenge) => challenge.intendedMove?.includes('t'))).toBe(true);
+    expect(challengeSets.motion.some((challenge) => challenge.intendedMove?.includes('F'))).toBe(true);
+    expect(challengeSets.motion.some((challenge) => challenge.intendedMove?.includes('e'))).toBe(true);
     expect(challengeSets.operator.some((challenge) => challenge.intendedMove === 'x')).toBe(true);
     expect(challengeSets.operator.some((challenge) => challenge.intendedMove === 'D')).toBe(true);
+    expect(challengeSets.operator.some((challenge) => challenge.intendedMove === 'C')).toBe(true);
+    expect(challengeSets.operator.some((challenge) => challenge.intendedMove === 'dt"')).toBe(true);
     expect(challengeSets['text-object'].some((challenge) => challenge.intendedMove === 'daw')).toBe(true);
+    expect(challengeSets['text-object'].some((challenge) => challenge.intendedMove === 'ca"')).toBe(true);
     expect(challengeSets.visual.some((challenge) => challenge.intendedMove === 'vi"c')).toBe(true);
+    expect(challengeSets.visual.some((challenge) => challenge.intendedMove === 'viwc')).toBe(true);
   });
 
   it('places the cursor so the intended move is the natural first action', () => {
@@ -301,5 +329,64 @@ describe('Vim Dojo learning', () => {
     expect(visualQuote?.initialContent).toContain('"production"');
     expect(visualQuote?.targetContent).toContain('"staging"');
     expect(visualQuote?.concepts).toEqual(['v', 'i"', 'c']);
+  });
+
+  it('finds true from after the closing paren, where f would miss it', () => {
+    const challenge = vimChallenges.find((entry) => entry.id === 'motion-07');
+    const trueAt = challenge?.initialContent.indexOf('true') ?? -1;
+
+    expect(challenge?.initialCursor?.column).toBeGreaterThan(trueAt + 'true'.length - 1);
+    expect(challenge?.targetContent).toContain('false');
+    expect(challenge?.concepts).toContain('F');
+  });
+
+  it('appends a suffix with e instead of rewriting the word', () => {
+    const challenge = vimChallenges.find((entry) => entry.id === 'motion-08');
+    const userAt = challenge?.initialContent.indexOf('user') ?? -1;
+
+    expect(challenge?.initialCursor?.column).toBe(userAt);
+    expect(challenge?.initialContent).toBe('return user;');
+    expect(challenge?.targetContent).toBe('return userId;');
+    expect(challenge?.concepts).toEqual(['e', 'a']);
+  });
+
+  it('changes the rest of the line with C, not a single word', () => {
+    const challenge = vimChallenges.find((entry) => entry.id === 'operator-07');
+
+    expect(challenge?.initialContent).toBe('return user.profile;');
+    expect(challenge?.targetContent).toBe('return user.id;');
+    expect(challenge?.initialCursor?.column).toBe(challenge?.initialContent.indexOf('user'));
+    expect(challenge?.concepts).toContain('C');
+  });
+
+  it('deletes till the quote and leaves the filename quoted', () => {
+    const challenge = vimChallenges.find((entry) => entry.id === 'operator-08');
+
+    expect(challenge?.initialContent).toContain('path + "backup.json"');
+    expect(challenge?.targetContent).toBe('open("backup.json")');
+    expect(challenge?.targetContent).toContain('"backup.json"');
+    expect(challenge?.initialCursor?.column).toBe(challenge?.initialContent.indexOf('path'));
+  });
+
+  it('teaches around-quotes as the opposite of inside-quotes', () => {
+    const inside = vimChallenges.find((entry) => entry.id === 'text-object-01');
+    const around = vimChallenges.find((entry) => entry.id === 'text-object-06');
+
+    expect(inside?.intendedMove).toBe('ci"');
+    expect(inside?.targetContent).toContain('"staging"');
+    expect(around?.intendedMove).toBe('ca"');
+    expect(around?.initialContent).toContain('"idle"');
+    expect(around?.targetContent).toBe('status: ready;');
+    expect(around?.targetContent).not.toContain('"');
+  });
+
+  it('teaches viw from the middle of retryCount, where ve would miss the prefix', () => {
+    const challenge = vimChallenges.find((entry) => entry.id === 'visual-04');
+    const wordAt = challenge?.initialContent.indexOf('retryCount') ?? -1;
+
+    expect(challenge?.initialCursor?.column).toBeGreaterThan(wordAt);
+    expect(challenge?.initialCursor?.column).toBeLessThan(wordAt + 'retryCount'.length);
+    expect(challenge?.targetContent).toContain('attemptCount');
+    expect(challenge?.concepts).toEqual(['v', 'iw', 'c']);
   });
 });

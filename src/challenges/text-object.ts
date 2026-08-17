@@ -86,4 +86,21 @@ export const textObjectChallenges: Challenge[] = [
     ],
     intendedMove: 'daw',
   },
+  {
+    id: 'text-object-06',
+    title: 'Change around quotes',
+    description: 'Replace the quoted status, including the quotes, with ready.',
+    category: 'text-object',
+    difficulty: 'easy',
+    initialContent: 'status: "idle";',
+    targetContent: 'status: ready;',
+    initialCursor: { line: 0, column: 10 },
+    concepts: ['ca"', 'text-object'],
+    hints: [
+      'The quotes should disappear with the old word.',
+      'Change around the quoted text, not just inside it.',
+      'Try `ca"ready`.',
+    ],
+    intendedMove: 'ca"',
+  },
 ];

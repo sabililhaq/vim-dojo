@@ -69,4 +69,21 @@ export const visualChallenges: Challenge[] = [
     ],
     intendedMove: 'vi"c',
   },
+  {
+    id: 'visual-04',
+    title: 'Change a word from inside',
+    description: 'Visually select the whole word from the middle, then change it to attemptCount.',
+    category: 'visual',
+    difficulty: 'medium',
+    initialContent: 'let retryCount = 0;',
+    targetContent: 'let attemptCount = 0;',
+    initialCursor: { line: 0, column: 8 },
+    concepts: ['v', 'iw', 'c'],
+    hints: [
+      'The cursor starts in the middle of the word.',
+      'Visually select the inner word, then change it.',
+      'Try `viwcattemptCount`.',
+    ],
+    intendedMove: 'viwc',
+  },
 ];
