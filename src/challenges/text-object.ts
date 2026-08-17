@@ -103,4 +103,21 @@ export const textObjectChallenges: Challenge[] = [
     ],
     intendedMove: 'ca"',
   },
+  {
+    id: 'text-object-07',
+    title: 'Change single-quoted text',
+    description: "Change 'dark' to 'light'.",
+    category: 'text-object',
+    difficulty: 'easy',
+    initialContent: "const mode = 'dark';",
+    targetContent: "const mode = 'light';",
+    initialCursor: { line: 0, column: 15 },
+    concepts: ["ci'", 'text-object'],
+    hints: [
+      'Single quotes work like double quotes for text objects.',
+      'Change the contents inside the single quotes.',
+      "Try `ci'light`.",
+    ],
+    intendedMove: "ci'",
+  },
 ];

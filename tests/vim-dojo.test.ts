@@ -193,18 +193,24 @@ describe('Vim Dojo', () => {
     expect(byId['motion-06']?.intendedMove).toBe('ct-');
     expect(byId['motion-07']?.intendedMove).toBe('Ftcw');
     expect(byId['motion-08']?.intendedMove).toBe('ea');
+    expect(byId['motion-09']?.intendedMove).toBe('dT"');
+    expect(byId['motion-10']?.intendedMove).toBe('%a');
     expect(byId['operator-03']?.intendedMove).toBe('dw');
     expect(byId['operator-04']?.intendedMove).toBe('dW');
     expect(byId['operator-05']?.intendedMove).toBe('x');
     expect(byId['operator-06']?.intendedMove).toBe('D');
     expect(byId['operator-07']?.intendedMove).toBe('C');
     expect(byId['operator-08']?.intendedMove).toBe('dt"');
+    expect(byId['operator-09']?.intendedMove).toBe('r');
+    expect(byId['operator-10']?.intendedMove).toBe('cc');
     expect(byId['text-object-04']?.intendedMove).toBe('ci{');
     expect(byId['text-object-05']?.intendedMove).toBe('daw');
     expect(byId['text-object-06']?.intendedMove).toBe('ca"');
+    expect(byId['text-object-07']?.intendedMove).toBe("ci'");
     expect(byId['visual-02']?.intendedMove).toBe('Vd');
     expect(byId['visual-03']?.intendedMove).toBe('vi"c');
     expect(byId['visual-04']?.intendedMove).toBe('viwc');
+    expect(byId['visual-05']?.intendedMove).toBe('vi(c');
   });
 });
 
@@ -229,7 +235,7 @@ describe('Vim Dojo learning', () => {
     const concepts = vimChallenges.flatMap((challenge) => challenge.concepts ?? []);
     const practiced = [...intended, ...concepts].join(' ');
 
-    for (const key of ['0', '$', 'w', 'b', 'e', 'f', 'F', 't', 'x', 'C', 'D', 'dd', 'dw', 'cw', 'dW', 'dt', 'ci"', 'ci(', 'ciw', 'ci{', 'ca"', 'daw', 'v', 'V', 'iw']) {
+    for (const key of ['0', '$', 'w', 'b', 'e', 'f', 'F', 't', 'T', '%', 'x', 'C', 'D', 'r', 'cc', 'dd', 'dw', 'cw', 'dW', 'dt', 'ci"', "ci'", 'ci(', 'ciw', 'ci{', 'ca"', 'daw', 'v', 'V', 'iw', 'i(']) {
       expect(practiced, key).toContain(key);
     }
 
@@ -237,14 +243,20 @@ describe('Vim Dojo learning', () => {
     expect(challengeSets.motion.some((challenge) => challenge.intendedMove?.includes('t'))).toBe(true);
     expect(challengeSets.motion.some((challenge) => challenge.intendedMove?.includes('F'))).toBe(true);
     expect(challengeSets.motion.some((challenge) => challenge.intendedMove?.includes('e'))).toBe(true);
+    expect(challengeSets.motion.some((challenge) => challenge.intendedMove?.includes('T'))).toBe(true);
+    expect(challengeSets.motion.some((challenge) => challenge.intendedMove?.includes('%'))).toBe(true);
     expect(challengeSets.operator.some((challenge) => challenge.intendedMove === 'x')).toBe(true);
     expect(challengeSets.operator.some((challenge) => challenge.intendedMove === 'D')).toBe(true);
     expect(challengeSets.operator.some((challenge) => challenge.intendedMove === 'C')).toBe(true);
     expect(challengeSets.operator.some((challenge) => challenge.intendedMove === 'dt"')).toBe(true);
+    expect(challengeSets.operator.some((challenge) => challenge.intendedMove === 'r')).toBe(true);
+    expect(challengeSets.operator.some((challenge) => challenge.intendedMove === 'cc')).toBe(true);
     expect(challengeSets['text-object'].some((challenge) => challenge.intendedMove === 'daw')).toBe(true);
     expect(challengeSets['text-object'].some((challenge) => challenge.intendedMove === 'ca"')).toBe(true);
+    expect(challengeSets['text-object'].some((challenge) => challenge.intendedMove === "ci'")).toBe(true);
     expect(challengeSets.visual.some((challenge) => challenge.intendedMove === 'vi"c')).toBe(true);
     expect(challengeSets.visual.some((challenge) => challenge.intendedMove === 'viwc')).toBe(true);
+    expect(challengeSets.visual.some((challenge) => challenge.intendedMove === 'vi(c')).toBe(true);
   });
 
   it('places the cursor so the intended move is the natural first action', () => {
@@ -388,5 +400,64 @@ describe('Vim Dojo learning', () => {
     expect(challenge?.initialCursor?.column).toBeLessThan(wordAt + 'retryCount'.length);
     expect(challenge?.targetContent).toContain('attemptCount');
     expect(challenge?.concepts).toEqual(['v', 'iw', 'c']);
+  });
+
+  it('deletes a path prefix with till-backward from the filename', () => {
+    const challenge = vimChallenges.find((entry) => entry.id === 'motion-09');
+    const appAt = challenge?.initialContent.indexOf('app.json') ?? -1;
+
+    expect(challenge?.initialCursor?.column).toBe(appAt);
+    expect(challenge?.initialContent).toContain('config/');
+    expect(challenge?.targetContent).toBe('open("app.json")');
+    expect(challenge?.targetContent).not.toContain('config');
+    expect(challenge?.concepts).toEqual(['T', 'd']);
+  });
+
+  it('starts on the opening paren so % jumps to the match before append', () => {
+    const challenge = vimChallenges.find((entry) => entry.id === 'motion-10');
+
+    expect(challenge?.initialContent).toBe('save(user)');
+    expect(challenge?.targetContent).toBe('save(user);');
+    expect(challenge?.initialCursor?.column).toBe(challenge?.initialContent.indexOf('('));
+    expect(challenge?.concepts).toEqual(['%', 'a']);
+  });
+
+  it('replaces the wrong digit in place with r', () => {
+    const challenge = vimChallenges.find((entry) => entry.id === 'operator-09');
+
+    expect(challenge?.initialContent).toBe('listen(8081);');
+    expect(challenge?.targetContent).toBe('listen(8080);');
+    expect(challenge?.initialCursor?.column).toBe(challenge?.initialContent.indexOf('1'));
+    expect(challenge?.concepts).toContain('r');
+  });
+
+  it('rewrites the whole line with cc instead of a single word', () => {
+    const challenge = vimChallenges.find((entry) => entry.id === 'operator-10');
+
+    expect(challenge?.initialContent).toBe('return legacyHandler(event);');
+    expect(challenge?.targetContent).toBe('return null;');
+    expect(challenge?.initialCursor?.column).toBe(0);
+    expect(challenge?.concepts).toContain('cc');
+  });
+
+  it('teaches single-quote text objects as the pair of double quotes', () => {
+    const doubles = vimChallenges.find((entry) => entry.id === 'text-object-01');
+    const singles = vimChallenges.find((entry) => entry.id === 'text-object-07');
+    const darkAt = singles?.initialContent.indexOf('dark') ?? -1;
+
+    expect(doubles?.intendedMove).toBe('ci"');
+    expect(singles?.intendedMove).toBe("ci'");
+    expect(singles?.initialCursor?.column).toBeGreaterThan(darkAt);
+    expect(singles?.initialCursor?.column).toBeLessThan(darkAt + 'dark'.length);
+    expect(singles?.targetContent).toContain("'light'");
+  });
+
+  it('teaches visual inner-paren from the opening parenthesis', () => {
+    const challenge = vimChallenges.find((entry) => entry.id === 'visual-05');
+
+    expect(challenge?.initialContent).toBe('sum(left, right)');
+    expect(challenge?.targetContent).toBe('sum(1, 2)');
+    expect(challenge?.initialCursor?.column).toBe(challenge?.initialContent.indexOf('('));
+    expect(challenge?.concepts).toEqual(['v', 'i(', 'c']);
   });
 });

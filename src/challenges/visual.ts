@@ -86,4 +86,21 @@ export const visualChallenges: Challenge[] = [
     ],
     intendedMove: 'viwc',
   },
+  {
+    id: 'visual-05',
+    title: 'Change inside parens visually',
+    description: 'Visually select the arguments, then change them to 1, 2.',
+    category: 'visual',
+    difficulty: 'medium',
+    initialContent: 'sum(left, right)',
+    targetContent: 'sum(1, 2)',
+    initialCursor: { line: 0, column: 3 },
+    concepts: ['v', 'i(', 'c'],
+    hints: [
+      'The cursor starts on the opening parenthesis.',
+      'Visually select inside the parentheses, then change the selection.',
+      'Try `vi(c1, 2`.',
+    ],
+    intendedMove: 'vi(c',
+  },
 ];
