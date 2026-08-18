@@ -60,20 +60,33 @@ describe('Vim Dojo', () => {
     expect(styles).not.toMatch(/color:\s*#fff/);
   });
 
-  it('resets the session to the first challenge and auto-continues after 5s', () => {
+  it('goes to the previous challenge and auto-continues after 5s', () => {
     const source = readFileSync(mountPath, 'utf-8');
     const template = readFileSync(templatePath, 'utf-8');
     const styles = readFileSync(stylesPath, 'utf-8');
 
-    expect(template).toContain('data-reset-button');
-    expect(source).toContain('function resetSession');
-    expect(source).toContain('challengeIndex = 0');
+    expect(template).toContain('data-previous-button');
+    expect(template).not.toContain('data-reset-button');
+    expect(source).toContain('function goToPrevious');
+    expect(source).not.toContain('function resetSession');
+    expect(source).toContain('challengeIndex -= 1');
     expect(template).toContain('data-auto-continue');
     expect(source).toContain('const AUTO_CONTINUE_MS = 5000');
     expect(source).toContain('function startAutoContinue');
     expect(source).toContain('Continuing in ${seconds}s');
     expect(source).not.toContain('Next in ${seconds}s');
     expect(styles).toContain('dojo-auto-continue 5s linear forwards');
+  });
+
+  it('marks a passed case from vim-dojo:completed', () => {
+    const source = readFileSync(mountPath, 'utf-8');
+    const template = readFileSync(templatePath, 'utf-8');
+
+    expect(template).toContain('data-passed');
+    expect(source).toContain('function updatePassedMark');
+    expect(source).toContain("localStorage.setItem(");
+    expect(source).toContain('vim-dojo:completed');
+    expect(source).toContain('${done} done');
   });
 
   it('validates completed content after normalizing line endings and trim', () => {

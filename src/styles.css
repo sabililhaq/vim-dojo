@@ -60,6 +60,16 @@
   letter-spacing: 0;
 }
 
+.vim-dojo .challenge-id {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.vim-dojo .challenge-id [data-passed] {
+  color: var(--vd-accent);
+}
+
 .vim-dojo .challenge-shell h2 {
   font-size: 1.15rem;
   margin: 0;

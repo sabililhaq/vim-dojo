@@ -47,7 +47,8 @@ export function mountVimDojo(root: HTMLElement, options: MountVimDojoOptions = {
     hintButton: dojo?.querySelector<HTMLButtonElement>('[data-hint-button]'),
     retryButton: dojo?.querySelector<HTMLButtonElement>('[data-retry-button]'),
     nextButton: dojo?.querySelector<HTMLButtonElement>('[data-next-button]'),
-    resetButton: dojo?.querySelector<HTMLButtonElement>('[data-reset-button]'),
+    previousButton: dojo?.querySelector<HTMLButtonElement>('[data-previous-button]'),
+    passed: dojo?.querySelector<HTMLElement>('[data-passed]'),
     autoContinue: dojo?.querySelector<HTMLElement>('[data-auto-continue]'),
     autoContinueLabel: dojo?.querySelector<HTMLElement>('[data-auto-continue-label]'),
     progress: dojo?.querySelector<HTMLElement>('[data-progress]'),
@@ -102,6 +103,14 @@ export function mountVimDojo(root: HTMLElement, options: MountVimDojoOptions = {
   function completedCount(): number {
     const known = new Set(challenges.map((challenge) => challenge.id));
     return readCompletedIds().filter((id) => known.has(id)).length;
+  }
+
+  function hasPassed(id: string): boolean {
+    return readCompletedIds().includes(id);
+  }
+
+  function updatePassedMark(): void {
+    els.passed?.toggleAttribute('hidden', !hasPassed(currentChallenge().id));
   }
 
   function twoDigit(value: number): string {
@@ -202,8 +211,9 @@ export function mountVimDojo(root: HTMLElement, options: MountVimDojoOptions = {
     renderChallenge();
   }
 
-  function resetSession(): void {
-    challengeIndex = 0;
+  function goToPrevious(): void {
+    if (challengeIndex <= 0) return;
+    challengeIndex -= 1;
     renderChallenge();
   }
 
@@ -222,8 +232,7 @@ export function mountVimDojo(root: HTMLElement, options: MountVimDojoOptions = {
   function progressLabel(): string {
     const total = String(challenges.length).padStart(2, '0');
     const done = completedCount();
-    const base = `${twoDigit(challengeIndex)} / ${total}`;
-    return done > 0 ? `${base} · ${done} done` : base;
+    return `${twoDigit(challengeIndex)} / ${total} · ${done} done`;
   }
 
   function replaceDocument(doc: string): void {
@@ -253,8 +262,10 @@ export function mountVimDojo(root: HTMLElement, options: MountVimDojoOptions = {
     setText(els.nextButton, 'Next');
     els.hint?.setAttribute('hidden', '');
     els.feedback?.setAttribute('hidden', '');
+    els.previousButton?.toggleAttribute('disabled', challengeIndex === 0);
     els.nextButton?.toggleAttribute('disabled', challengeIndex === challenges.length - 1);
     els.hintButton?.removeAttribute('disabled');
+    updatePassedMark();
 
     if (view) {
       replaceDocument(challenge.initialContent);
@@ -326,6 +337,7 @@ export function mountVimDojo(root: HTMLElement, options: MountVimDojoOptions = {
       // Progress persistence is optional for the MVP.
     }
 
+    updatePassedMark();
     setText(els.progress, progressLabel());
   }
 
@@ -418,7 +430,7 @@ export function mountVimDojo(root: HTMLElement, options: MountVimDojoOptions = {
     els.hintButton?.addEventListener('click', renderHint);
     els.retryButton?.addEventListener('click', renderChallenge);
     els.nextButton?.addEventListener('click', goToNext);
-    els.resetButton?.addEventListener('click', resetSession);
+    els.previousButton?.addEventListener('click', goToPrevious);
   } catch (error) {
     console.error(error);
     els.error?.removeAttribute('hidden');

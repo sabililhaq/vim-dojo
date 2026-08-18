@@ -2,7 +2,10 @@ export const vimDojoMarkup = `
 <section class="vim-dojo" data-vim-dojo>
   <div class="challenge-shell" data-state="loading">
     <div class="challenge-meta">
-      <span data-challenge-count>Challenge 01</span>
+      <span class="challenge-id">
+        <span data-challenge-count>Challenge 01</span>
+        <span data-passed hidden>done</span>
+      </span>
       <span data-category></span>
     </div>
     <h2 data-title>Loading Vim Dojo</h2>
@@ -36,8 +39,8 @@ export const vimDojoMarkup = `
     <div class="actions">
       <button type="button" data-hint-button>Hint</button>
       <button type="button" data-retry-button>Retry</button>
+      <button type="button" class="secondary" data-previous-button>Previous</button>
       <button type="button" data-next-button>Next</button>
-      <button type="button" class="secondary" data-reset-button title="Reset session — go to first challenge">Reset</button>
     </div>
 
     <div class="progress">

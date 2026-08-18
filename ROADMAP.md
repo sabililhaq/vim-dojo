@@ -10,7 +10,7 @@ These are the learning modes the dojo is missing.
 
 ### Play by category
 
-Pick a category and stay in it. `?category=motion` should load only that set. Next / Reset stay inside the filter. Difficulty can be a second filter once there are enough hard cases.
+Pick a category and stay in it. `?category=motion` should load only that set. Next / Previous stay inside the filter. Difficulty can be a second filter once there are enough hard cases.
 
 This is the first gap: the data is already categorized, the UI is not.
 
@@ -22,7 +22,7 @@ Rules:
 
 - Prefer cases not in `vim-dojo:completed`.
 - Do not reshuffle on every retry of the same case.
-- Reset starts a new shuffle, it does not rewind to motion-01.
+- A new shuffle is a separate action from Previous; it does not rewind to motion-01.
 
 Random is for review. Category order stays the default for first-time play.
 
