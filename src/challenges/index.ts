@@ -3,6 +3,8 @@ import { motionChallenges } from './motion';
 import { operatorChallenges } from './operator';
 import { textObjectChallenges } from './text-object';
 import { visualChallenges } from './visual';
+import { searchChallenges } from './search';
+import { replaceChallenges } from './replace';
 import type { Challenge } from './types';
 
 export type { Category, Challenge, Position } from './types';
@@ -12,6 +14,8 @@ export const challengeSets = {
   operator: operatorChallenges,
   'text-object': textObjectChallenges,
   visual: visualChallenges,
+  search: searchChallenges,
+  replace: replaceChallenges,
 } as const;
 
 export const vimChallenges: Challenge[] = [
@@ -19,4 +23,6 @@ export const vimChallenges: Challenge[] = [
   ...operatorChallenges,
   ...textObjectChallenges,
   ...visualChallenges,
+  ...searchChallenges,
+  ...replaceChallenges,
 ];

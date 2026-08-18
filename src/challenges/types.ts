@@ -2,7 +2,9 @@ export type Category =
   | 'motion'
   | 'operator'
   | 'text-object'
-  | 'visual';
+  | 'visual'
+  | 'search'
+  | 'replace';
 
 export type Position = {
   line: number;

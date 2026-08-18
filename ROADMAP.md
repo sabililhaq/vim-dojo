@@ -55,7 +55,7 @@ Interactive hints must work from the existing `hints`, `intendedMove`, `initialC
 
 Only after the modes above exist.
 
-- More categories: search (`/`, `n`, `*`), counts (`3w`, `2dd`), macros, replace (`:s`). Same file-per-category pattern as today.
+- More categories: counts (`3w`, `2dd`), macros. Search and replace already have their own files.
 - Harder cases. Most of the set is easy on purpose.
 - Concept review: "practice `daw` again" from the cases that already list it in `concepts`.
 - Host options for the site embed: default mode, hide the intro, start on today's daily.

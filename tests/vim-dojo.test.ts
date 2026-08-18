@@ -236,6 +236,11 @@ describe('Vim Dojo', () => {
     expect(byId['operator-11']?.intendedMove).toBe('Gdd');
     expect(byId['text-object-08']?.intendedMove).toBe('Gci"');
     expect(byId['visual-06']?.intendedMove).toBe('GVkkd');
+    expect(byId['search-01']?.intendedMove).toBe('/legacycw');
+    expect(byId['search-02']?.intendedMove).toBe('/betanci"');
+    expect(byId['search-03']?.intendedMove).toBe('*cw');
+    expect(byId['replace-01']?.intendedMove).toBe(':s/colour/color');
+    expect(byId['replace-02']?.intendedMove).toBe(':%s/colour/color/g');
   });
 });
 
@@ -260,7 +265,7 @@ describe('Vim Dojo learning', () => {
     const concepts = vimChallenges.flatMap((challenge) => challenge.concepts ?? []);
     const practiced = [...intended, ...concepts].join(' ');
 
-    for (const key of ['0', '$', 'w', 'b', 'e', 'f', 'F', 't', 'T', '%', 'G', 'x', 'C', 'D', 'r', 'cc', 'dd', 'dw', 'cw', 'dW', 'dt', 'ci"', "ci'", 'ci(', 'ciw', 'ci{', 'ca"', 'daw', 'v', 'V', 'iw', 'i(']) {
+    for (const key of ['0', '$', 'w', 'b', 'e', 'f', 'F', 't', 'T', '%', 'G', '/', 'n', '*', ':s', ':%s', 'x', 'C', 'D', 'r', 'cc', 'dd', 'dw', 'cw', 'dW', 'dt', 'ci"', "ci'", 'ci(', 'ciw', 'ci{', 'ca"', 'daw', 'v', 'V', 'iw', 'i(']) {
       expect(practiced, key).toContain(key);
     }
 
@@ -286,6 +291,11 @@ describe('Vim Dojo learning', () => {
     expect(challengeSets.operator.some((challenge) => challenge.intendedMove === 'Gdd')).toBe(true);
     expect(challengeSets['text-object'].some((challenge) => challenge.intendedMove === 'Gci"')).toBe(true);
     expect(challengeSets.visual.some((challenge) => challenge.intendedMove === 'GVkkd')).toBe(true);
+    expect(challengeSets.search.some((challenge) => challenge.intendedMove === '/legacycw')).toBe(true);
+    expect(challengeSets.search.some((challenge) => challenge.intendedMove === '/betanci"')).toBe(true);
+    expect(challengeSets.search.some((challenge) => challenge.intendedMove === '*cw')).toBe(true);
+    expect(challengeSets.replace.some((challenge) => challenge.intendedMove === ':s/colour/color')).toBe(true);
+    expect(challengeSets.replace.some((challenge) => challenge.intendedMove === ':%s/colour/color/g')).toBe(true);
   });
 
   it('places the cursor so the intended move is the natural first action', () => {
@@ -299,7 +309,16 @@ describe('Vim Dojo learning', () => {
   });
 
   it('keeps most buffers short, and viewport cases long enough to scroll', () => {
-    const viewportIds = new Set(['motion-11', 'operator-11', 'text-object-08', 'visual-06']);
+    const viewportIds = new Set([
+      'motion-11',
+      'operator-11',
+      'text-object-08',
+      'visual-06',
+      'search-01',
+      'search-02',
+      'search-03',
+      'replace-02',
+    ]);
 
     for (const challenge of vimChallenges) {
       const lines = challenge.initialContent.split('\n');
@@ -307,8 +326,7 @@ describe('Vim Dojo learning', () => {
       if (viewportIds.has(challenge.id)) {
         expect(lines.length, challenge.id).toBeGreaterThan(12);
         expect(lines.length, challenge.id).toBeLessThanOrEqual(24);
-        expect(challenge.initialCursor, challenge.id).toEqual({ line: 0, column: 0 });
-        expect(challenge.intendedMove, challenge.id).toMatch(/^G/);
+        expect(challenge.intendedMove, challenge.id).toMatch(/^([G/*]|:%s)/);
         continue;
       }
 
@@ -490,6 +508,16 @@ describe('Vim Dojo learning', () => {
     expect(singles?.initialCursor?.column).toBeGreaterThan(darkAt);
     expect(singles?.initialCursor?.column).toBeLessThan(darkAt + 'dark'.length);
     expect(singles?.targetContent).toContain("'light'");
+  });
+
+  it('starts star-search on experimental so * jumps to the later match', () => {
+    const challenge = vimChallenges.find((entry) => entry.id === 'search-03');
+    const wordAt = challenge?.initialContent.indexOf('experimental') ?? -1;
+
+    expect(challenge?.initialCursor?.line).toBe(0);
+    expect(challenge?.initialCursor?.column).toBe(wordAt);
+    expect(challenge?.initialContent.split('\n').at(-1)).toBe('return experimental;');
+    expect(challenge?.targetContent.split('\n').at(-1)).toBe('return stable;');
   });
 
   it('teaches visual inner-paren from the opening parenthesis', () => {
