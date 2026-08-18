@@ -41,7 +41,7 @@ Rules:
 
 - `id` is unique and starts with `<category>-`, then the next number in that file.
 - The task should look like real editing. Prefer "delete this log line" over "move 17 characters right".
-- `initialContent` and `targetContent` must differ. Use `'\n'` for multiple lines. Keep buffers short (about 1–5 lines).
+- `initialContent` and `targetContent` must differ. Use `'\n'` for multiple lines. Keep most buffers short (about 1–5 lines). A viewport case may be longer (about 13–20 lines) when the edit starts off-screen and the first move is a jump such as `G`.
 - `initialCursor` is 0-indexed. Place it so the intended Vim move is the natural one.
 - `intendedMove` is the keys you want people to practice, without the replacement text.
 - Give at least one hint. The last hint may show the intended keys.

@@ -60,6 +60,14 @@ describe('Vim Dojo', () => {
     expect(styles).not.toMatch(/color:\s*#fff/);
   });
 
+  it('keeps the editor a fixed scrollable viewport', () => {
+    const styles = readFileSync(stylesPath, 'utf-8');
+
+    expect(styles).toMatch(/\.cm-editor \{[\s\S]*?height: 12rem;/);
+    expect(styles).not.toContain('min-height: 7rem');
+    expect(styles).toMatch(/\.cm-scroller \{[\s\S]*?overflow: auto;/);
+  });
+
   it('goes to the previous challenge and auto-continues after 5s', () => {
     const source = readFileSync(mountPath, 'utf-8');
     const template = readFileSync(templatePath, 'utf-8');
@@ -224,6 +232,10 @@ describe('Vim Dojo', () => {
     expect(byId['visual-03']?.intendedMove).toBe('vi"c');
     expect(byId['visual-04']?.intendedMove).toBe('viwc');
     expect(byId['visual-05']?.intendedMove).toBe('vi(c');
+    expect(byId['motion-11']?.intendedMove).toBe('Gcw');
+    expect(byId['operator-11']?.intendedMove).toBe('Gdd');
+    expect(byId['text-object-08']?.intendedMove).toBe('Gci"');
+    expect(byId['visual-06']?.intendedMove).toBe('GVkkd');
   });
 });
 
@@ -248,7 +260,7 @@ describe('Vim Dojo learning', () => {
     const concepts = vimChallenges.flatMap((challenge) => challenge.concepts ?? []);
     const practiced = [...intended, ...concepts].join(' ');
 
-    for (const key of ['0', '$', 'w', 'b', 'e', 'f', 'F', 't', 'T', '%', 'x', 'C', 'D', 'r', 'cc', 'dd', 'dw', 'cw', 'dW', 'dt', 'ci"', "ci'", 'ci(', 'ciw', 'ci{', 'ca"', 'daw', 'v', 'V', 'iw', 'i(']) {
+    for (const key of ['0', '$', 'w', 'b', 'e', 'f', 'F', 't', 'T', '%', 'G', 'x', 'C', 'D', 'r', 'cc', 'dd', 'dw', 'cw', 'dW', 'dt', 'ci"', "ci'", 'ci(', 'ciw', 'ci{', 'ca"', 'daw', 'v', 'V', 'iw', 'i(']) {
       expect(practiced, key).toContain(key);
     }
 
@@ -270,6 +282,10 @@ describe('Vim Dojo learning', () => {
     expect(challengeSets.visual.some((challenge) => challenge.intendedMove === 'vi"c')).toBe(true);
     expect(challengeSets.visual.some((challenge) => challenge.intendedMove === 'viwc')).toBe(true);
     expect(challengeSets.visual.some((challenge) => challenge.intendedMove === 'vi(c')).toBe(true);
+    expect(challengeSets.motion.some((challenge) => challenge.intendedMove === 'Gcw')).toBe(true);
+    expect(challengeSets.operator.some((challenge) => challenge.intendedMove === 'Gdd')).toBe(true);
+    expect(challengeSets['text-object'].some((challenge) => challenge.intendedMove === 'Gci"')).toBe(true);
+    expect(challengeSets.visual.some((challenge) => challenge.intendedMove === 'GVkkd')).toBe(true);
   });
 
   it('places the cursor so the intended move is the natural first action', () => {
@@ -282,9 +298,20 @@ describe('Vim Dojo learning', () => {
     }
   });
 
-  it('keeps buffers short enough to study, not hunt through', () => {
+  it('keeps most buffers short, and viewport cases long enough to scroll', () => {
+    const viewportIds = new Set(['motion-11', 'operator-11', 'text-object-08', 'visual-06']);
+
     for (const challenge of vimChallenges) {
       const lines = challenge.initialContent.split('\n');
+
+      if (viewportIds.has(challenge.id)) {
+        expect(lines.length, challenge.id).toBeGreaterThan(12);
+        expect(lines.length, challenge.id).toBeLessThanOrEqual(24);
+        expect(challenge.initialCursor, challenge.id).toEqual({ line: 0, column: 0 });
+        expect(challenge.intendedMove, challenge.id).toMatch(/^G/);
+        continue;
+      }
+
       expect(lines.length, challenge.id).toBeLessThanOrEqual(5);
       expect(challenge.initialContent.length, challenge.id).toBeLessThan(160);
     }
