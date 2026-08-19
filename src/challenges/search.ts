@@ -138,4 +138,33 @@ export const searchChallenges: Challenge[] = [
     ],
     intendedMove: '*cw',
   },
+  {
+    id: 'search-04',
+    title: 'Search the word backward',
+    description: 'The later experimental should stay. Jump back to the first one and change it to stable.',
+    category: 'search',
+    difficulty: 'medium',
+    initialContent: [
+      'const flag = experimental;',
+      'const host = "0.0.0.0";',
+      'const port = 8080;',
+      'const timeout = 5000;',
+      'return experimental;',
+    ].join('\n'),
+    targetContent: [
+      'const flag = stable;',
+      'const host = "0.0.0.0";',
+      'const port = 8080;',
+      'const timeout = 5000;',
+      'return experimental;',
+    ].join('\n'),
+    initialCursor: { line: 4, column: 7 },
+    concepts: ['#', 'cw'],
+    hints: [
+      'The cursor starts on the later experimental. That one should stay.',
+      'Search backward for the word under the cursor, then change the match.',
+      'Try `#` then `cwstable`.',
+    ],
+    intendedMove: '#cw',
+  },
 ];

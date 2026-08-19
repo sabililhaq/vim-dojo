@@ -63,4 +63,21 @@ export const replaceChallenges: Challenge[] = [
     ],
     intendedMove: ':%s/colour/color/g',
   },
+  {
+    id: 'replace-03',
+    title: 'Substitute every match on the line',
+    description: 'Rename every colour to color on this line only.',
+    category: 'replace',
+    difficulty: 'easy',
+    initialContent: 'const colour = mix(colour, colour);',
+    targetContent: 'const color = mix(color, color);',
+    initialCursor: { line: 0, column: 0 },
+    concepts: [':s', 'g'],
+    hints: [
+      'This line has more than one colour. A first-only substitute would leave some behind.',
+      'Substitute globally on the current line, not the whole file.',
+      'Try `:s/colour/color/g` then Enter.',
+    ],
+    intendedMove: ':s/colour/color/g',
+  },
 ];

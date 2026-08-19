@@ -224,4 +224,21 @@ export const operatorChallenges: Challenge[] = [
     ],
     intendedMove: 'Gdd',
   },
+  {
+    id: 'operator-12',
+    title: 'Swap two characters',
+    description: 'form is a typo for from. Swap the two letters.',
+    category: 'operator',
+    difficulty: 'easy',
+    initialContent: 'import form "./auth";',
+    targetContent: 'import from "./auth";',
+    initialCursor: { line: 0, column: 8 },
+    concepts: ['x', 'p'],
+    hints: [
+      'The cursor starts on the first of two swapped letters.',
+      'Delete the character, then put it after the next one.',
+      'Try `xp`.',
+    ],
+    intendedMove: 'xp',
+  },
 ];

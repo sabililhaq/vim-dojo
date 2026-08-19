@@ -145,4 +145,21 @@ export const visualChallenges: Challenge[] = [
     ],
     intendedMove: 'GVkkd',
   },
+  {
+    id: 'visual-07',
+    title: 'Change inside braces visually',
+    description: 'Visually select the brace body, then change it to break.',
+    category: 'visual',
+    difficulty: 'medium',
+    initialContent: 'while (busy) { wait(); }',
+    targetContent: 'while (busy) { break; }',
+    initialCursor: { line: 0, column: 15 },
+    concepts: ['v', 'i{', 'c'],
+    hints: [
+      'The cursor starts inside the braces.',
+      'Visually select the inner brace text, then change it.',
+      'Try `vi{c` then ` break; `.',
+    ],
+    intendedMove: 'vi{c',
+  },
 ];

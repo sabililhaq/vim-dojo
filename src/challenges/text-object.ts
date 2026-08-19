@@ -165,4 +165,21 @@ export const textObjectChallenges: Challenge[] = [
     ],
     intendedMove: 'Gci"',
   },
+  {
+    id: 'text-object-09',
+    title: 'Change inside brackets',
+    description: 'Replace the list contents with id.',
+    category: 'text-object',
+    difficulty: 'easy',
+    initialContent: 'const ids = [1, 2, 3];',
+    targetContent: 'const ids = [id];',
+    initialCursor: { line: 0, column: 16 },
+    concepts: ['ci[', 'text-object'],
+    hints: [
+      'The cursor starts inside the square brackets.',
+      'Change the contents inside the brackets, not the brackets themselves.',
+      'Try `ci[id`.',
+    ],
+    intendedMove: 'ci[',
+  },
 ];

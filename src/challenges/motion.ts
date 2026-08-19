@@ -220,4 +220,21 @@ export const motionChallenges: Challenge[] = [
     ],
     intendedMove: 'Gcw',
   },
+  {
+    id: 'motion-12',
+    title: 'First non-blank',
+    description: 'Skip the indent, then change debug to trace.',
+    category: 'motion',
+    difficulty: 'easy',
+    initialContent: '    debug = true;',
+    targetContent: '    trace = true;',
+    initialCursor: { line: 0, column: 16 },
+    concepts: ['^', 'cw'],
+    hints: [
+      'The cursor starts at the end of an indented line.',
+      '`0` would land on the spaces. Jump to the first non-blank, then change the word.',
+      'Try `^cwtrace`.',
+    ],
+    intendedMove: '^cw',
+  },
 ];
