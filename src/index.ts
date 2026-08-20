@@ -5,6 +5,15 @@ export {
   type Challenge,
   type Position,
 } from './challenges';
+export {
+  categoriesIn,
+  createPlaylist,
+  parseQuery,
+  playlistUrl,
+  type PlayMode,
+  type Playlist,
+  type PlaylistQuery,
+} from './playlist';
 export { classifyAttempt, methodLabel, type Method } from './classifier';
 export {
   contentDiffSize,

@@ -77,8 +77,13 @@ describe('Vim Dojo', () => {
     expect(template).not.toContain('data-reset-button');
     expect(source).toContain('function goToPrevious');
     expect(source).not.toContain('function resetSession');
-    expect(source).toContain('challengeIndex -= 1');
+    expect(source).toContain('function goToOffset');
     expect(template).toContain('data-auto-continue');
+    expect(template).toContain('data-toast');
+    expect(styles).toContain('.vim-dojo .toast {');
+    expect(styles).toContain('position: fixed');
+    expect(styles).toContain('env(safe-area-inset-bottom');
+    expect(styles).toContain('backdrop-filter: blur(12px)');
     expect(source).toContain('const AUTO_CONTINUE_MS = 5000');
     expect(source).toContain('function startAutoContinue');
     expect(source).toContain('Continuing in ${seconds}s');
@@ -95,6 +100,26 @@ describe('Vim Dojo', () => {
     expect(source).toContain("localStorage.setItem(");
     expect(source).toContain('vim-dojo:completed');
     expect(source).toContain('${done} done');
+  });
+
+  it('plays by category, random, and daily from the query string', () => {
+    const source = readFileSync(mountPath, 'utf-8');
+    const template = readFileSync(templatePath, 'utf-8');
+    const styles = readFileSync(stylesPath, 'utf-8');
+
+    expect(template).toContain('data-categories');
+    expect(template).toContain('data-modes');
+    expect(template).toContain('data-shuffle-button');
+    expect(template).toContain('Want a specific category?');
+    expect(template.indexOf('class="actions"')).toBeLessThan(template.indexOf('data-toast'));
+    expect(template.indexOf('data-progress')).toBeLessThan(template.indexOf('data-categories'));
+    expect(source).toContain('createPlaylist');
+    expect(source).toContain('parseQuery');
+    expect(source).toContain('vim-dojo:shuffle');
+    expect(source).toContain('vim-dojo:daily:');
+    expect(source).toContain("mode: 'daily'");
+    expect(source).toContain("mode: 'random'");
+    expect(styles).toContain('.vim-dojo .playlist-row');
   });
 
   it('validates completed content after normalizing line endings and trim', () => {
@@ -400,6 +425,9 @@ describe('Vim Dojo learning', () => {
     expect(roadmap).toContain('?mode=daily');
     expect(roadmap).toMatch(/Ghost the next character/);
     expect(roadmap).toMatch(/No accounts/);
+    expect(roadmap).toMatch(/## Shipped/);
+    expect(roadmap.indexOf('## Next')).toBeLessThan(roadmap.indexOf('## Shipped'));
+    expect(roadmap.indexOf('Interactive hints')).toBeLessThan(roadmap.indexOf('## Shipped'));
   });
 
   it('pairs change-till with a visual inner-quote case', () => {

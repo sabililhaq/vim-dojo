@@ -44,6 +44,41 @@
   gap: 0.9rem;
 }
 
+.vim-dojo .playlist {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.vim-dojo .playlist-prompt {
+  margin: 0.35rem 0 0;
+  color: rgb(var(--vd-gray));
+  font-size: 0.82rem;
+}
+
+.vim-dojo .playlist-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.7rem;
+  color: rgb(var(--vd-gray));
+  font-size: 0.82rem;
+}
+
+.vim-dojo .playlist-row a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.vim-dojo .playlist-row a:hover {
+  color: var(--vd-accent);
+  text-decoration: underline;
+}
+
+.vim-dojo .playlist-row a[aria-current="page"] {
+  color: var(--vd-accent);
+  font-weight: 600;
+}
+
 .vim-dojo .challenge-meta,
 .vim-dojo .progress,
 .vim-dojo .attempt-stats {
@@ -119,9 +154,13 @@
   padding: 0 0.75rem;
 }
 
-.vim-dojo .editor-wrap .cm-focused {
+.vim-dojo .editor-wrap:has(.cm-focused) {
   outline: 2px solid var(--vd-accent);
-  outline-offset: -2px;
+  outline-offset: 1px;
+}
+
+.vim-dojo .editor-wrap .cm-focused {
+  outline: none;
 }
 
 .vim-dojo .editor-wrap .cm-scroller {
@@ -129,7 +168,6 @@
   overflow: auto;
 }
 
-.vim-dojo .feedback,
 .vim-dojo .hint,
 .vim-dojo .error {
   border-top: 1px solid rgb(var(--vd-gray-light));
@@ -137,7 +175,6 @@
   padding: 0.85rem 0;
 }
 
-.vim-dojo .feedback p,
 .vim-dojo .hint,
 .vim-dojo .error {
   font-size: 0.9rem;
@@ -145,16 +182,42 @@
   margin: 0;
 }
 
-.vim-dojo .feedback strong {
+.vim-dojo .toast {
+  position: fixed;
+  left: 50%;
+  bottom: max(1rem, env(safe-area-inset-bottom, 0px));
+  z-index: 20;
+  box-sizing: border-box;
+  width: min(42rem, calc(100vw - 2rem));
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid rgb(var(--vd-gray-light));
+  border-radius: 6px;
+  background: color-mix(in srgb, rgb(var(--vd-bg)) 88%, transparent);
+  backdrop-filter: blur(12px);
+  color: rgb(var(--vd-gray-dark));
+  animation: dojo-toast-in 180ms ease-out;
+}
+
+.vim-dojo .toast[hidden] {
+  display: none;
+}
+
+.vim-dojo .toast p {
+  font-size: 0.9rem;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.vim-dojo .toast [data-result-message] {
   color: rgb(var(--vd-black));
-  display: block;
-  font-size: 0.95rem;
-  margin-bottom: 0.35rem;
 }
 
 .vim-dojo .attempt-stats {
   justify-content: flex-start;
-  margin-top: 0.45rem !important;
 }
 
 .vim-dojo .auto-continue {
@@ -240,10 +303,26 @@
   }
 }
 
+@keyframes dojo-toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 10px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .vim-dojo .auto-continue:not([hidden]) .auto-continue-fill {
     animation: none;
     transform: scaleX(1);
+  }
+
+  .vim-dojo .toast {
+    animation: none;
+    transform: translateX(-50%);
   }
 }
 

@@ -55,7 +55,7 @@ npm test
 npm run dev
 ```
 
-Open the new case with `?challenge=motion-03` and solve it with the intended move.
+Open the new case with `?challenge=motion-03` (or `?category=motion`) and solve it with the intended move.
 
 ## 4. Open a PR
 

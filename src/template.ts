@@ -17,35 +17,42 @@ export const vimDojoMarkup = `
 
     <p class="error" data-error hidden>Unable to initialize the Vim editor. Please refresh the page or try another browser.</p>
 
-    <div class="feedback" data-feedback hidden>
-      <strong data-result-title>Completed</strong>
-      <p data-result-message></p>
-      <p class="attempt-stats">
-        <span data-method></span>
-        <span data-keystrokes></span>
-        <span data-time></span>
-      </p>
+    <div class="controls">
+      <div class="actions">
+        <button type="button" data-hint-button>Hint</button>
+        <button type="button" data-retry-button>Retry</button>
+        <button type="button" class="secondary" data-previous-button>Previous</button>
+        <button type="button" data-next-button>Next</button>
+        <button type="button" class="secondary" data-shuffle-button hidden>Shuffle</button>
+      </div>
+
+      <div class="toast" data-toast hidden role="status" aria-live="polite">
+        <p data-result-message></p>
+        <p class="attempt-stats">
+          <span data-method></span>
+          <span data-keystrokes></span>
+          <span data-time></span>
+        </p>
+        <div class="auto-continue" data-auto-continue hidden>
+          <span class="auto-continue-track" aria-hidden="true">
+            <span class="auto-continue-fill"></span>
+          </span>
+          <span data-auto-continue-label></span>
+        </div>
+      </div>
     </div>
 
     <div class="hint" data-hint hidden></div>
 
-    <div class="auto-continue" data-auto-continue hidden>
-      <span class="auto-continue-track" aria-hidden="true">
-        <span class="auto-continue-fill"></span>
-      </span>
-      <span data-auto-continue-label></span>
-    </div>
-
-    <div class="actions">
-      <button type="button" data-hint-button>Hint</button>
-      <button type="button" data-retry-button>Retry</button>
-      <button type="button" class="secondary" data-previous-button>Previous</button>
-      <button type="button" data-next-button>Next</button>
-    </div>
-
     <div class="progress">
       <span data-progress>01 / 08</span>
       <span data-mode>Normal</span>
+    </div>
+
+    <div class="playlist">
+      <nav class="playlist-row" data-modes aria-label="Practice mode"></nav>
+      <p class="playlist-prompt">Want a specific category?</p>
+      <nav class="playlist-row" data-categories aria-label="Challenge category"></nav>
     </div>
   </div>
 

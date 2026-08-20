@@ -3,8 +3,16 @@ import { javascript } from '@codemirror/lang-javascript';
 import { EditorState } from '@codemirror/state';
 import { drawSelection, EditorView } from '@codemirror/view';
 import { getCM, vim, Vim } from '@replit/codemirror-vim';
-import { vimChallenges as defaultChallenges, type Challenge } from './challenges';
+import { vimChallenges as defaultChallenges, type Category, type Challenge } from './challenges';
 import { classifyAttempt, methodLabel, type Method } from './classifier';
+import {
+  categoriesIn,
+  createPlaylist,
+  parseQuery,
+  playlistUrl,
+  type Playlist,
+  type PlaylistQuery,
+} from './playlist';
 import { isChallengeComplete } from './validator';
 import { vimDojoMarkup } from './template';
 import type { InteractionEvent, VimMode } from './telemetry';
@@ -20,9 +28,15 @@ type VimState = {
   insertMode?: boolean;
 };
 
+type ShuffleState = {
+  category: Category | null;
+  ids: string[];
+};
+
 export function mountVimDojo(root: HTMLElement, options: MountVimDojoOptions = {}): () => void {
   const challenges = options.challenges ?? defaultChallenges;
   const basePath = options.basePath ?? '/vim';
+  const categories = categoriesIn(challenges);
 
   if (!root.querySelector('[data-vim-dojo]')) {
     root.innerHTML = vimDojoMarkup;
@@ -37,8 +51,7 @@ export function mountVimDojo(root: HTMLElement, options: MountVimDojoOptions = {
     category: dojo?.querySelector<HTMLElement>('[data-category]'),
     title: dojo?.querySelector<HTMLElement>('[data-title]'),
     description: dojo?.querySelector<HTMLElement>('[data-description]'),
-    feedback: dojo?.querySelector<HTMLElement>('[data-feedback]'),
-    resultTitle: dojo?.querySelector<HTMLElement>('[data-result-title]'),
+    toast: dojo?.querySelector<HTMLElement>('[data-toast]'),
     resultMessage: dojo?.querySelector<HTMLElement>('[data-result-message]'),
     method: dojo?.querySelector<HTMLElement>('[data-method]'),
     keystrokes: dojo?.querySelector<HTMLElement>('[data-keystrokes]'),
@@ -48,17 +61,20 @@ export function mountVimDojo(root: HTMLElement, options: MountVimDojoOptions = {
     retryButton: dojo?.querySelector<HTMLButtonElement>('[data-retry-button]'),
     nextButton: dojo?.querySelector<HTMLButtonElement>('[data-next-button]'),
     previousButton: dojo?.querySelector<HTMLButtonElement>('[data-previous-button]'),
+    shuffleButton: dojo?.querySelector<HTMLButtonElement>('[data-shuffle-button]'),
     passed: dojo?.querySelector<HTMLElement>('[data-passed]'),
     autoContinue: dojo?.querySelector<HTMLElement>('[data-auto-continue]'),
     autoContinueLabel: dojo?.querySelector<HTMLElement>('[data-auto-continue-label]'),
     progress: dojo?.querySelector<HTMLElement>('[data-progress]'),
     mode: dojo?.querySelector<HTMLElement>('[data-mode]'),
     error: dojo?.querySelector<HTMLElement>('[data-error]'),
+    categories: dojo?.querySelector<HTMLElement>('[data-categories]'),
+    modes: dojo?.querySelector<HTMLElement>('[data-modes]'),
   };
 
   const AUTO_CONTINUE_MS = 5000;
 
-  let challengeIndex = getInitialChallengeIndex();
+  let playlist: Playlist;
   let view: EditorView | undefined;
   let events: InteractionEvent[] = [];
   let startedAt: number | null = null;
@@ -71,24 +87,12 @@ export function mountVimDojo(root: HTMLElement, options: MountVimDojoOptions = {
   let autoContinueTicker: ReturnType<typeof setInterval> | null = null;
   let autoContinueDeadline: number | null = null;
 
-  function challengeIndexById(id: string | null): number {
-    if (!id) return -1;
-    return challenges.findIndex((challenge) => challenge.id === id);
-  }
-
-  function getInitialChallengeIndex(): number {
-    const fromQuery = new URLSearchParams(window.location.search).get('challenge');
-    const queryIndex = challengeIndexById(fromQuery);
-    if (queryIndex >= 0) return queryIndex;
-
+  function readLastChallenge(): string | null {
     try {
-      const storedIndex = challengeIndexById(window.localStorage.getItem('vim-dojo:lastChallenge'));
-      if (storedIndex >= 0) return storedIndex;
+      return window.localStorage.getItem('vim-dojo:lastChallenge');
     } catch {
-      // localStorage may be unavailable in private browsing modes.
+      return null;
     }
-
-    return 0;
   }
 
   function readCompletedIds(): string[] {
@@ -100,8 +104,57 @@ export function mountVimDojo(root: HTMLElement, options: MountVimDojoOptions = {
     }
   }
 
+  function readShuffleState(): ShuffleState | null {
+    try {
+      const parsed = JSON.parse(window.sessionStorage.getItem('vim-dojo:shuffle') ?? 'null');
+      if (!parsed || !Array.isArray(parsed.ids)) return null;
+      return {
+        category: categories.includes(parsed.category) ? parsed.category : null,
+        ids: parsed.ids.filter((id: unknown) => typeof id === 'string'),
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  function writeShuffleState(category: Category | null, ids: string[] | null): void {
+    if (!ids?.length) return;
+    try {
+      window.sessionStorage.setItem('vim-dojo:shuffle', JSON.stringify({ category, ids }));
+    } catch {
+      // sessionStorage may be unavailable in private browsing modes.
+    }
+  }
+
+  function createInitialPlaylist(): Playlist {
+    return buildPlaylist(parseQuery(window.location.search, categories), false);
+  }
+
+  function buildPlaylist(query: PlaylistQuery, reshuffle: boolean): Playlist {
+    const shuffle = readShuffleState();
+    const shuffleIds =
+      !reshuffle && query.mode === 'random' && shuffle && shuffle.category === query.category
+        ? shuffle.ids
+        : null;
+    const next = createPlaylist({
+      challenges,
+      query,
+      completedIds: readCompletedIds(),
+      lastChallengeId: readLastChallenge(),
+      shuffleIds,
+      reshuffle,
+    });
+    writeShuffleState(next.query.category, next.shuffleIds);
+    return next;
+  }
+
+  function applyPlaylist(query: PlaylistQuery, reshuffle = false): void {
+    playlist = buildPlaylist(query, reshuffle);
+    renderChallenge();
+  }
+
   function completedCount(): number {
-    const known = new Set(challenges.map((challenge) => challenge.id));
+    const known = new Set(playlist.items.map((challenge) => challenge.id));
     return readCompletedIds().filter((id) => known.has(id)).length;
   }
 
@@ -118,7 +171,7 @@ export function mountVimDojo(root: HTMLElement, options: MountVimDojoOptions = {
   }
 
   function currentChallenge(): Challenge {
-    return challenges[challengeIndex] ?? challenges[0];
+    return playlist.items[playlist.index] ?? playlist.items[0] ?? challenges[0];
   }
 
   function setText(element: Element | null | undefined, text: string): void {
@@ -205,21 +258,29 @@ export function mountVimDojo(root: HTMLElement, options: MountVimDojoOptions = {
     setText(els.autoContinueLabel, '');
   }
 
-  function goToNext(): void {
-    if (challengeIndex >= challenges.length - 1) return;
-    challengeIndex += 1;
+  function goToOffset(delta: number): void {
+    const index = playlist.index + delta;
+    if (index < 0 || index >= playlist.items.length) return;
+    const challenge = playlist.items[index];
+    playlist = {
+      ...playlist,
+      index,
+      query: { ...playlist.query, challenge: challenge?.id ?? null },
+    };
     renderChallenge();
   }
 
+  function goToNext(): void {
+    goToOffset(1);
+  }
+
   function goToPrevious(): void {
-    if (challengeIndex <= 0) return;
-    challengeIndex -= 1;
-    renderChallenge();
+    goToOffset(-1);
   }
 
   function startAutoContinue(): void {
     cancelAutoContinue();
-    if (challengeIndex >= challenges.length - 1) return;
+    if (playlist.index >= playlist.items.length - 1) return;
 
     autoContinueDeadline = performance.now() + AUTO_CONTINUE_MS;
     els.autoContinue?.removeAttribute('hidden');
@@ -230,9 +291,14 @@ export function mountVimDojo(root: HTMLElement, options: MountVimDojoOptions = {
   }
 
   function progressLabel(): string {
-    const total = String(challenges.length).padStart(2, '0');
+    if (playlist.query.mode === 'daily') {
+      return playlist.dailyDate ? `daily · ${playlist.dailyDate}` : 'daily';
+    }
+
+    const total = String(playlist.items.length).padStart(2, '0');
     const done = completedCount();
-    return `${twoDigit(challengeIndex)} / ${total} · ${done} done`;
+    const suffix = playlist.query.mode === 'random' ? 'shuffled' : `${done} done`;
+    return `${twoDigit(playlist.index)} / ${total} · ${suffix}`;
   }
 
   function replaceDocument(doc: string): void {
@@ -243,8 +309,57 @@ export function mountVimDojo(root: HTMLElement, options: MountVimDojoOptions = {
   }
 
   function challengeUrl(id: string): string {
-    const path = basePath.endsWith('/') && basePath.length > 1 ? basePath.slice(0, -1) : basePath;
-    return `${path || '/'}?challenge=${id}`;
+    return playlistUrl(basePath, { ...playlist.query, challenge: id });
+  }
+
+  function setPlaylistRow(
+    row: HTMLElement | null | undefined,
+    items: { href: string; label: string; current: boolean }[],
+  ): void {
+    if (!row) return;
+    row.replaceChildren(
+      ...items.map((item) => {
+        const link = document.createElement('a');
+        link.href = item.href;
+        link.textContent = item.label;
+        link.dataset.playlistLink = '';
+        if (item.current) link.setAttribute('aria-current', 'page');
+        return link;
+      }),
+    );
+  }
+
+  function renderPlaylistNav(): void {
+    const current = playlist.query;
+    setPlaylistRow(els.categories, [
+      {
+        href: playlistUrl(basePath, { ...current, mode: current.mode === 'daily' ? 'sequence' : current.mode, category: null, challenge: null }),
+        label: 'all',
+        current: current.mode !== 'daily' && current.category == null,
+      },
+      ...categories.map((category) => ({
+        href: playlistUrl(basePath, { ...current, mode: current.mode === 'daily' ? 'sequence' : current.mode, category, challenge: null }),
+        label: category,
+        current: current.mode !== 'daily' && current.category === category,
+      })),
+    ]);
+    setPlaylistRow(els.modes, [
+      {
+        href: playlistUrl(basePath, { mode: 'sequence', category: current.category, challenge: null }),
+        label: 'practice',
+        current: current.mode === 'sequence',
+      },
+      {
+        href: playlistUrl(basePath, { mode: 'random', category: current.category, challenge: null }),
+        label: 'random',
+        current: current.mode === 'random',
+      },
+      {
+        href: playlistUrl(basePath, { mode: 'daily', category: null, challenge: null }),
+        label: 'daily',
+        current: current.mode === 'daily',
+      },
+    ]);
   }
 
   function renderChallenge(): void {
@@ -252,8 +367,10 @@ export function mountVimDojo(root: HTMLElement, options: MountVimDojoOptions = {
     cancelAutoContinue();
     forceNormalMode();
     resetTelemetry();
+    renderPlaylistNav();
 
-    setText(els.count, `Challenge ${twoDigit(challengeIndex)}`);
+    const daily = playlist.query.mode === 'daily';
+    setText(els.count, daily ? 'Daily kata' : `Challenge ${twoDigit(playlist.index)}`);
     setText(els.category, `${challenge.category} / ${challenge.difficulty}`);
     setText(els.title, challenge.title);
     setText(els.description, challenge.description);
@@ -261,9 +378,12 @@ export function mountVimDojo(root: HTMLElement, options: MountVimDojoOptions = {
     setText(els.hint, '');
     setText(els.nextButton, 'Next');
     els.hint?.setAttribute('hidden', '');
-    els.feedback?.setAttribute('hidden', '');
-    els.previousButton?.toggleAttribute('disabled', challengeIndex === 0);
-    els.nextButton?.toggleAttribute('disabled', challengeIndex === challenges.length - 1);
+    els.toast?.setAttribute('hidden', '');
+    els.previousButton?.toggleAttribute('hidden', daily);
+    els.nextButton?.toggleAttribute('hidden', daily);
+    els.shuffleButton?.toggleAttribute('hidden', playlist.query.mode !== 'random');
+    els.previousButton?.toggleAttribute('disabled', playlist.index === 0);
+    els.nextButton?.toggleAttribute('disabled', playlist.index >= playlist.items.length - 1);
     els.hintButton?.removeAttribute('disabled');
     updatePassedMark();
 
@@ -314,14 +434,13 @@ export function mountVimDojo(root: HTMLElement, options: MountVimDojoOptions = {
     const seconds = ((completedAt - (startedAt ?? completedAt)) / 1000).toFixed(2);
     const keyEvents = events.filter((event) => event.type === 'key').length;
 
-    setText(els.resultTitle, 'Completed');
     setText(els.resultMessage, completionMessage(method, challenge));
     setText(els.method, `Method: ${methodLabel(method)}`);
     setText(els.keystrokes, `${keyEvents} keystrokes`);
     setText(els.time, `${seconds}s`);
-    els.feedback?.removeAttribute('hidden');
+    els.toast?.removeAttribute('hidden');
 
-    if (challengeIndex === challenges.length - 1) {
+    if (playlist.index >= playlist.items.length - 1) {
       setText(els.nextButton, 'Set complete');
       els.nextButton?.setAttribute('disabled', '');
     } else {
@@ -333,6 +452,9 @@ export function mountVimDojo(root: HTMLElement, options: MountVimDojoOptions = {
         'vim-dojo:completed',
         JSON.stringify(Array.from(new Set([...readCompletedIds(), challenge.id]))),
       );
+      if (playlist.dailyDate) {
+        window.localStorage.setItem(`vim-dojo:daily:${playlist.dailyDate}`, challenge.id);
+      }
     } catch {
       // Progress persistence is optional for the MVP.
     }
@@ -412,6 +534,18 @@ export function mountVimDojo(root: HTMLElement, options: MountVimDojoOptions = {
     if (selectionLength > 0) record({ type: 'mouse-selection', length: selectionLength, t: 0 });
   }
 
+  function onPlaylistClick(event: MouseEvent): void {
+    if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+      return;
+    }
+
+    const link = event.target instanceof Element ? event.target.closest('a[data-playlist-link]') : null;
+    if (!(link instanceof HTMLAnchorElement)) return;
+
+    event.preventDefault();
+    applyPlaylist(parseQuery(new URL(link.href).search, categories));
+  }
+
   function unmount(): void {
     cancelAutoContinue();
     window.removeEventListener('mouseup', onWindowMouseUp);
@@ -423,6 +557,7 @@ export function mountVimDojo(root: HTMLElement, options: MountVimDojoOptions = {
   try {
     if (!dojo || !editorParent) throw new Error('Missing Vim Dojo root');
 
+    playlist = createInitialPlaylist();
     createEditor();
     renderChallenge();
     els.shell?.setAttribute('data-state', 'ready');
@@ -431,6 +566,11 @@ export function mountVimDojo(root: HTMLElement, options: MountVimDojoOptions = {
     els.retryButton?.addEventListener('click', renderChallenge);
     els.nextButton?.addEventListener('click', goToNext);
     els.previousButton?.addEventListener('click', goToPrevious);
+    els.shuffleButton?.addEventListener('click', () => {
+      applyPlaylist({ ...playlist.query, mode: 'random', challenge: null }, true);
+    });
+    els.categories?.addEventListener('click', onPlaylistClick);
+    els.modes?.addEventListener('click', onPlaylistClick);
   } catch (error) {
     console.error(error);
     els.error?.removeAttribute('hidden');
