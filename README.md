@@ -40,5 +40,5 @@ Query params: `?category=motion`, `?mode=random`, `?mode=daily` (or `?daily`). C
 The host can theme it with `--accent`, `--black`, `--gray`, `--gray-light`, `--gray-dark`, `--bg`, and `--surface`. Invert the RGB triples for dark mode.
 
 ```json
-"vim-dojo": "github:sabililhaq/vim-dojo#v0.1.7"
+"vim-dojo": "github:sabililhaq/vim-dojo#v0.1.8"
 ```
