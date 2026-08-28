@@ -53,7 +53,7 @@ A daily URL that includes `?challenge=` keeps that case after midnight. Open `?m
 
 Only after interactive hints exist.
 
-- More categories: counts (`3w`, `2dd`), macros. Search and replace already have their own files.
+- Counts (`3w`, `2dd`). Search, replace, registers, marks, macros, formatting, and visual-block insert already have their own files.
 - Harder cases. Most of the set is easy on purpose.
 - Concept review: "practice `daw` again" from the cases that already list it in `concepts`.
 - Host options for the site embed: default mode, hide the intro, start on today's daily.

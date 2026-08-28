@@ -212,6 +212,11 @@ describe('playlist helpers', () => {
       'visual',
       'search',
       'replace',
+      'register',
+      'mark',
+      'macro',
+      'format',
+      'multi-cursor',
     ]);
     expect(filterByCategory(vimChallenges, 'replace')).toEqual(challengeSets.replace);
   });

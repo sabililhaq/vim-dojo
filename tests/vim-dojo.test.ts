@@ -43,6 +43,7 @@ describe('Vim Dojo', () => {
 
     expect(source).toMatch(/from ['"]@replit\/codemirror-vim['"]/);
     expect(source).toContain('vim()');
+    expect(source).toContain('EditorState.allowMultipleSelections.of(true)');
     expect(source).toContain('EditorView.updateListener.of(onEditorUpdate)');
     expect(source).not.toContain('defaultKeymap');
     expect(source).toContain('forceNormalMode');
@@ -272,6 +273,19 @@ describe('Vim Dojo', () => {
     expect(byId['operator-12']?.intendedMove).toBe('xp');
     expect(byId['text-object-09']?.intendedMove).toBe('ci[');
     expect(byId['visual-07']?.intendedMove).toBe('vi{c');
+    expect(byId['visual-08']?.intendedMove).toBe('<C-v>jjr');
+    expect(byId['visual-09']?.intendedMove).toBe('Vjd');
+    expect(byId['register-01']?.intendedMove).toBe('"ayyjdd"ap');
+    expect(byId['register-02']?.intendedMove).toBe('"ayiwjwciw<C-r>a');
+    expect(byId['mark-01']?.intendedMove).toBe("maggdd'acw");
+    expect(byId['mark-02']?.intendedMove).toBe("maggcw'acw");
+    expect(byId['macro-01']?.intendedMove).toBe('qadwjq2@a');
+    expect(byId['macro-02']?.intendedMove).toBe('qa$xjq2@a');
+    expect(byId['format-01']?.intendedMove).toBe('>>');
+    expect(byId['format-02']?.intendedMove).toBe('==');
+    expect(byId['format-03']?.intendedMove).toBe('>j');
+    expect(byId['multi-cursor-01']?.intendedMove).toBe('<C-v>jjI');
+    expect(byId['multi-cursor-02']?.intendedMove).toBe('$<C-v>jjA');
   });
 });
 
@@ -296,7 +310,7 @@ describe('Vim Dojo learning', () => {
     const concepts = vimChallenges.flatMap((challenge) => challenge.concepts ?? []);
     const practiced = [...intended, ...concepts].join(' ');
 
-    for (const key of ['0', '$', '^', 'w', 'b', 'e', 'f', 'F', 't', 'T', '%', 'G', '/', 'n', '*', '#', ':s', ':%s', 'x', 'p', 'C', 'D', 'r', 'cc', 'dd', 'dw', 'cw', 'dW', 'dt', 'ci"', "ci'", 'ci(', 'ciw', 'ci{', 'ci[', 'ca"', 'daw', 'v', 'V', 'iw', 'i(', 'i{']) {
+    for (const key of ['0', '$', '^', 'w', 'b', 'e', 'f', 'F', 't', 'T', '%', 'G', '/', 'n', '*', '#', ':s', ':%s', 'x', 'p', 'C', 'D', 'r', 'cc', 'dd', 'dw', 'cw', 'dW', 'dt', 'ci"', "ci'", 'ci(', 'ciw', 'ci{', 'ci[', 'ca"', 'daw', 'v', 'V', 'iw', 'i(', 'i{', '"a', '<C-r>', 'ma', "'a", 'qa', '@a', '>>', '==', '>j', '<C-v>']) {
       expect(practiced, key).toContain(key);
     }
 
@@ -333,6 +347,17 @@ describe('Vim Dojo learning', () => {
     expect(challengeSets.operator.some((challenge) => challenge.intendedMove === 'xp')).toBe(true);
     expect(challengeSets['text-object'].some((challenge) => challenge.intendedMove === 'ci[')).toBe(true);
     expect(challengeSets.visual.some((challenge) => challenge.intendedMove === 'vi{c')).toBe(true);
+    expect(challengeSets.visual.some((challenge) => challenge.intendedMove === '<C-v>jjr')).toBe(true);
+    expect(challengeSets.visual.some((challenge) => challenge.intendedMove === 'Vjd')).toBe(true);
+    expect(challengeSets.register.some((challenge) => challenge.intendedMove === '"ayyjdd"ap')).toBe(true);
+    expect(challengeSets.register.some((challenge) => challenge.intendedMove === '"ayiwjwciw<C-r>a')).toBe(true);
+    expect(challengeSets.mark.some((challenge) => challenge.intendedMove === "maggdd'acw")).toBe(true);
+    expect(challengeSets.macro.some((challenge) => challenge.intendedMove === 'qadwjq2@a')).toBe(true);
+    expect(challengeSets.format.some((challenge) => challenge.intendedMove === '>>')).toBe(true);
+    expect(challengeSets.format.some((challenge) => challenge.intendedMove === '==')).toBe(true);
+    expect(challengeSets.format.some((challenge) => challenge.intendedMove === '>j')).toBe(true);
+    expect(challengeSets['multi-cursor'].some((challenge) => challenge.intendedMove === '<C-v>jjI')).toBe(true);
+    expect(challengeSets['multi-cursor'].some((challenge) => challenge.intendedMove === '$<C-v>jjA')).toBe(true);
   });
 
   it('places the cursor so the intended move is the natural first action', () => {
@@ -640,5 +665,62 @@ describe('Vim Dojo learning', () => {
     expect(lineGlobal?.targetContent).not.toContain('colour');
     expect(lineGlobal?.initialContent.split('\n')).toHaveLength(1);
     expect(lineGlobal?.concepts).toEqual([':s', 'g']);
+  });
+
+  it('replaces a visual-block column of flags', () => {
+    const challenge = vimChallenges.find((entry) => entry.id === 'visual-08');
+
+    expect(challenge?.initialContent.split('\n')).toHaveLength(3);
+    expect(challenge?.initialCursor?.column).toBe(challenge?.initialContent.indexOf('0'));
+    expect(challenge?.targetContent).toBe(['timeout: 1,', 'retries: 1,', 'workers: 1,'].join('\n'));
+    expect(challenge?.concepts).toEqual(['Ctrl-v', 'r']);
+  });
+
+  it('parks a yank in a named register so a delete does not clobber it', () => {
+    const challenge = vimChallenges.find((entry) => entry.id === 'register-01');
+
+    expect(challenge?.initialContent).toContain('unused();');
+    expect(challenge?.targetContent).not.toContain('unused');
+    expect(challenge?.targetContent.split('\n').filter((line) => line.includes('retries'))).toHaveLength(2);
+    expect(challenge?.concepts).toEqual(['"', 'yy', 'p']);
+  });
+
+  it('returns to a mark after deleting an earlier line', () => {
+    const challenge = vimChallenges.find((entry) => entry.id === 'mark-01');
+
+    expect(challenge?.initialCursor?.line).toBe(1);
+    expect(challenge?.initialContent.split('\n')[1]).toContain('start');
+    expect(challenge?.targetContent).toBe(['boot();', 'finish();'].join('\n'));
+    expect(challenge?.concepts).toContain('m');
+  });
+
+  it('records a line-local edit and replays it as a macro', () => {
+    const challenge = vimChallenges.find((entry) => entry.id === 'macro-01');
+
+    expect(challenge?.initialContent.split('\n').every((line) => line.startsWith('flag '))).toBe(true);
+    expect(challenge?.targetContent.split('\n').some((line) => line.startsWith('flag '))).toBe(false);
+    expect(challenge?.concepts).toEqual(['q', '@', 'dw']);
+  });
+
+  it('indents with >> and reindents with ==', () => {
+    const shift = vimChallenges.find((entry) => entry.id === 'format-01');
+    const auto = vimChallenges.find((entry) => entry.id === 'format-02');
+    const two = vimChallenges.find((entry) => entry.id === 'format-03');
+
+    expect(shift?.initialContent).toContain('\nreturn boot();');
+    expect(shift?.targetContent).toContain('\n  return boot();');
+    expect(auto?.initialContent.startsWith('  ')).toBe(true);
+    expect(auto?.targetContent.startsWith('const')).toBe(true);
+    expect(two?.intendedMove).toBe('>j');
+  });
+
+  it('inserts and appends on every line of a visual block', () => {
+    const prefix = vimChallenges.find((entry) => entry.id === 'multi-cursor-01');
+    const suffix = vimChallenges.find((entry) => entry.id === 'multi-cursor-02');
+
+    expect(prefix?.targetContent.split('\n').every((line) => line.startsWith('req.'))).toBe(true);
+    expect(suffix?.targetContent.split('\n').every((line) => line.endsWith(','))).toBe(true);
+    expect(prefix?.concepts).toEqual(['Ctrl-v', 'I']);
+    expect(suffix?.concepts).toEqual(['$', 'Ctrl-v', 'A']);
   });
 });

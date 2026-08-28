@@ -4,7 +4,12 @@ export type Category =
   | 'text-object'
   | 'visual'
   | 'search'
-  | 'replace';
+  | 'replace'
+  | 'register'
+  | 'mark'
+  | 'macro'
+  | 'format'
+  | 'multi-cursor';
 
 export type Position = {
   line: number;

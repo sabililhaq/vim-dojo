@@ -1,0 +1,38 @@
+import type { Challenge } from './types';
+
+export const markChallenges: Challenge[] = [
+  {
+    id: 'mark-01',
+    title: 'Mark and jump back',
+    description: 'Delete unused, then change start to boot. Mark start so you can return after the delete.',
+    category: 'mark',
+    difficulty: 'medium',
+    initialContent: ['unused();', 'start();', 'finish();'].join('\n'),
+    targetContent: ['boot();', 'finish();'].join('\n'),
+    initialCursor: { line: 1, column: 0 },
+    concepts: ['m', "'"],
+    hints: [
+      'You will leave this line, delete something above it, then come back.',
+      'Set mark a, delete the first line, jump back, then change the word.',
+      "Try `maggdd'acwboot`.",
+    ],
+    intendedMove: "maggdd'acw",
+  },
+  {
+    id: 'mark-02',
+    title: 'Edit two sites with a mark',
+    description: 'Rename timeout to delay, then leftover to kept. Mark leftover so you can return.',
+    category: 'mark',
+    difficulty: 'hard',
+    initialContent: ['timeout = 3000;', 'retries = 3;', 'leftover = 1;'].join('\n'),
+    targetContent: ['delay = 3000;', 'retries = 3;', 'kept = 1;'].join('\n'),
+    initialCursor: { line: 2, column: 0 },
+    concepts: ['m', "'", 'cw'],
+    hints: [
+      'Two words in different places need to change. Mark the one you are on.',
+      'Set mark a, jump to the top and change timeout, then jump back and change leftover.',
+      "Try `maggcw'acwkept`.",
+    ],
+    intendedMove: "maggcw'acw",
+  },
+];

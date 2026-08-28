@@ -486,6 +486,7 @@ export function mountVimDojo(root: HTMLElement, options: MountVimDojoOptions = {
           history(),
           drawSelection(),
           javascript(),
+          EditorState.allowMultipleSelections.of(true),
           EditorView.lineWrapping,
           EditorView.updateListener.of(onEditorUpdate),
         ],

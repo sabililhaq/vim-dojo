@@ -1,0 +1,55 @@
+import type { Challenge } from './types';
+
+export const formatChallenges: Challenge[] = [
+  {
+    id: 'format-01',
+    title: 'Indent a line',
+    description: 'Indent the return so it sits inside the function.',
+    category: 'format',
+    difficulty: 'medium',
+    initialContent: ['function start() {', 'return boot();', '}'].join('\n'),
+    targetContent: ['function start() {', '  return boot();', '}'].join('\n'),
+    initialCursor: { line: 1, column: 0 },
+    concepts: ['>>'],
+    hints: [
+      'The return is at the same indent as the function. It should be inside the body.',
+      'Indent the current line by one shiftwidth.',
+      'Try `>>`.',
+    ],
+    intendedMove: '>>',
+  },
+  {
+    id: 'format-02',
+    title: 'Auto-indent a line',
+    description: 'The const was indented by accident. Reindent it to the left margin.',
+    category: 'format',
+    difficulty: 'medium',
+    initialContent: '  const retries = 3;',
+    targetContent: 'const retries = 3;',
+    initialCursor: { line: 0, column: 2 },
+    concepts: ['=='],
+    hints: [
+      'You do not need to count spaces. Let Vim pick the indent.',
+      'Auto-indent the current line.',
+      'Try `==`.',
+    ],
+    intendedMove: '==',
+  },
+  {
+    id: 'format-03',
+    title: 'Indent two lines',
+    description: 'Indent user and path, leaving id where it is.',
+    category: 'format',
+    difficulty: 'medium',
+    initialContent: ['user,', 'path,', 'id,'].join('\n'),
+    targetContent: ['  user,', '  path,', 'id,'].join('\n'),
+    initialCursor: { line: 0, column: 0 },
+    concepts: ['>', 'j'],
+    hints: [
+      'Two lines need indent, not three.',
+      'Indent from here through the next line.',
+      'Try `>j`.',
+    ],
+    intendedMove: '>j',
+  },
+];

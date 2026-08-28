@@ -12,8 +12,13 @@ Most contributions should be a new practice case. You do not need to touch the e
 | `src/challenges/visual.ts` | `v` / `V` / `Ctrl-v` then an operator |
 | `src/challenges/search.ts` | `/`, `n`, `*` |
 | `src/challenges/replace.ts` | `:s`, `:%s` |
+| `src/challenges/register.ts` | `"ay`, `"ap`, `<C-r>` |
+| `src/challenges/mark.ts` | `ma`, `'a` |
+| `src/challenges/macro.ts` | `qa`, `@a` |
+| `src/challenges/format.ts` | `>>`, `==`, `>` |
+| `src/challenges/multi-cursor.ts` | `Ctrl-v` then `I` / `A` |
 
-Need counts or macros? Add a new file next to those, export an array, register it in `src/challenges/index.ts`, and add the category to `src/challenges/types.ts`.
+Need a new category? Add a file next to those, export an array, register it in `src/challenges/index.ts`, and add the category to `src/challenges/types.ts`.
 
 ## 2. Append one object
 

@@ -35,10 +35,10 @@ mountVimDojo(document.querySelector('#dojo'), {
 });
 ```
 
-Query params: `?category=motion`, `?mode=random`, `?mode=daily` (or `?daily`). Combine category with random. Deep-link a case with `?challenge=motion-01`.
+Query params: `?category=motion`, `?category=macro`, `?mode=random`, `?mode=daily` (or `?daily`). Combine category with random. Deep-link a case with `?challenge=motion-01`.
 
 The host can theme it with `--accent`, `--black`, `--gray`, `--gray-light`, `--gray-dark`, `--bg`, and `--surface`. Invert the RGB triples for dark mode.
 
 ```json
-"vim-dojo": "github:sabililhaq/vim-dojo#v0.1.8"
+"vim-dojo": "github:sabililhaq/vim-dojo#v0.1.9"
 ```
