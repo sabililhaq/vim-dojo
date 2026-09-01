@@ -61,6 +61,31 @@ describe('Vim Dojo', () => {
     expect(styles).not.toMatch(/color:\s*#fff/);
   });
 
+  it('themes the vim search panel from host tokens so dark mode input text stays readable', () => {
+    const styles = readFileSync(stylesPath, 'utf-8');
+
+    expect(styles).toContain('.cm-editor .cm-panels');
+    expect(styles).toContain('.cm-vim-panel input');
+    expect(styles).toContain('.cm-searchMatch');
+    expect(styles).toMatch(/\.cm-editor \.cm-panels \{[\s\S]*?background-color: rgb\(var\(--vd-surface\)\)/);
+    expect(styles).toMatch(/\.cm-vim-panel input[\s\S]*?color: rgb\(var\(--vd-gray-dark\)\)/);
+  });
+
+  it('clears vim search highlights when resetting a challenge', () => {
+    const source = readFileSync(mountPath, 'utf-8');
+
+    expect(source).toContain('function clearSearchHighlights');
+    expect(source).toContain('cm.removeOverlay()');
+    expect(source).toContain('clearSearchHighlights()');
+  });
+
+  it('tells CodeMirror when the host theme is dark', () => {
+    const source = readFileSync(mountPath, 'utf-8');
+
+    expect(source).toContain('function prefersDarkTheme');
+    expect(source).toContain("EditorView.theme({}, { dark: prefersDarkTheme() })");
+  });
+
   it('keeps the editor a fixed scrollable viewport', () => {
     const styles = readFileSync(stylesPath, 'utf-8');
 

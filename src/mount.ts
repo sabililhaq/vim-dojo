@@ -211,6 +211,16 @@ export function mountVimDojo(root: HTMLElement, options: MountVimDojoOptions = {
     view.dispatch({ selection: { anchor: cursor } });
   }
 
+  function clearSearchHighlights(): void {
+    const cm = view ? getCM(view) : null;
+    if (!cm) return;
+
+    // Clears CodeMirror search decorations (cm-searchMatch) left by /, ?, *, #.
+    cm.removeOverlay();
+    const vimState = cm.state?.vim as (VimState & { searchState_?: { setOverlay(value: null): void } }) | undefined;
+    vimState?.searchState_?.setOverlay?.(null);
+  }
+
   function forceNormalMode(): void {
     const cm = view ? getCM(view) : null;
     if (cm) {
@@ -218,6 +228,7 @@ export function mountVimDojo(root: HTMLElement, options: MountVimDojoOptions = {
       if (vimState?.insertMode) Vim.exitInsertMode(cm as never);
       if (vimState?.visualMode) Vim.exitVisualMode(cm as never);
       Vim.handleKey(cm, '<Esc>', 'user');
+      clearSearchHighlights();
     }
 
     currentMode = 'normal';
@@ -473,6 +484,13 @@ export function mountVimDojo(root: HTMLElement, options: MountVimDojoOptions = {
     }
   }
 
+  function prefersDarkTheme(): boolean {
+    const theme = document.documentElement.dataset.theme;
+    if (theme === 'dark') return true;
+    if (theme === 'light') return false;
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  }
+
   function createEditor(): void {
     if (!editorParent) throw new Error('Missing Vim Dojo editor');
 
@@ -488,6 +506,8 @@ export function mountVimDojo(root: HTMLElement, options: MountVimDojoOptions = {
           javascript(),
           EditorState.allowMultipleSelections.of(true),
           EditorView.lineWrapping,
+          // Match host dark/light so CM panels/search chrome aren't stuck on light defaults.
+          EditorView.theme({}, { dark: prefersDarkTheme() }),
           EditorView.updateListener.of(onEditorUpdate),
         ],
       }),

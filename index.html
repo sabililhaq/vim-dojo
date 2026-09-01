@@ -11,10 +11,27 @@
         --gray: 96, 115, 159;
         --gray-light: 229, 233, 240;
         --gray-dark: 34, 41, 57;
+        --bg: 255, 255, 255;
+        --surface: 255, 255, 255;
+        color-scheme: light;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --accent: #6b9eff;
+          --black: 240, 237, 230;
+          --gray: 159, 140, 96;
+          --gray-light: 58, 55, 50;
+          --gray-dark: 221, 214, 198;
+          --bg: 20, 20, 20;
+          --surface: 30, 30, 30;
+          color-scheme: dark;
+        }
       }
 
       body {
         margin: 0;
+        background: rgb(var(--bg));
         color: rgb(var(--gray-dark));
         font-family: system-ui, sans-serif;
         font-size: 20px;
