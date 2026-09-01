@@ -35,4 +35,21 @@ export const macroChallenges: Challenge[] = [
     ],
     intendedMove: 'qa$xjq2@a',
   },
+  {
+    id: 'macro-03',
+    title: 'Replay a line prefix',
+    description: 'Add const to the start of every assignment. Record the insert once, then replay it.',
+    category: 'macro',
+    difficulty: 'hard',
+    initialContent: ['retries = 3;', 'timeout = 5;', 'workers = 2;'].join('\n'),
+    targetContent: ['const retries = 3;', 'const timeout = 5;', 'const workers = 2;'].join('\n'),
+    initialCursor: { line: 0, column: 0 },
+    concepts: ['q', '@', 'I'],
+    hints: [
+      'Every line needs the same prefix at column 0.',
+      'Record insert-at-start, leave insert, go down, then replay twice.',
+      'Try `qaI` `jq2@a`, typing const and Esc between.',
+    ],
+    intendedMove: 'qaIjq2@a',
+  },
 ];

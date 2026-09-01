@@ -302,15 +302,29 @@ describe('Vim Dojo', () => {
     expect(byId['visual-09']?.intendedMove).toBe('Vjd');
     expect(byId['register-01']?.intendedMove).toBe('"ayyjdd"ap');
     expect(byId['register-02']?.intendedMove).toBe('"ayiwjwciw<C-r>a');
+    expect(byId['register-03']?.intendedMove).toBe('"ayygg"aP');
+    expect(byId['register-04']?.intendedMove).toBe('yyj"_ddp');
     expect(byId['mark-01']?.intendedMove).toBe("maggdd'acw");
     expect(byId['mark-02']?.intendedMove).toBe("maggcw'acw");
+    expect(byId['mark-03']?.intendedMove).toBe("Gcw''cw");
     expect(byId['macro-01']?.intendedMove).toBe('qadwjq2@a');
     expect(byId['macro-02']?.intendedMove).toBe('qa$xjq2@a');
+    expect(byId['macro-03']?.intendedMove).toBe('qaIjq2@a');
     expect(byId['format-01']?.intendedMove).toBe('>>');
     expect(byId['format-02']?.intendedMove).toBe('==');
     expect(byId['format-03']?.intendedMove).toBe('>j');
+    expect(byId['format-04']?.intendedMove).toBe('<<');
+    expect(byId['format-05']?.intendedMove).toBe('<j');
+    expect(byId['format-06']?.intendedMove).toBe('>G');
     expect(byId['multi-cursor-01']?.intendedMove).toBe('<C-v>jjI');
     expect(byId['multi-cursor-02']?.intendedMove).toBe('$<C-v>jjA');
+    expect(byId['multi-cursor-03']?.intendedMove).toBe('<C-v>jjc');
+    expect(byId['motion-13']?.intendedMove).toBe('ggcw');
+    expect(byId['operator-13']?.intendedMove).toBe('J');
+    expect(byId['operator-14']?.intendedMove).toBe('yyp');
+    expect(byId['operator-15']?.intendedMove).toBe('guiw');
+    expect(byId['text-object-10']?.intendedMove).toBe('di(');
+    expect(byId['text-object-11']?.intendedMove).toBe('da"');
   });
 });
 
@@ -335,7 +349,7 @@ describe('Vim Dojo learning', () => {
     const concepts = vimChallenges.flatMap((challenge) => challenge.concepts ?? []);
     const practiced = [...intended, ...concepts].join(' ');
 
-    for (const key of ['0', '$', '^', 'w', 'b', 'e', 'f', 'F', 't', 'T', '%', 'G', '/', 'n', '*', '#', ':s', ':%s', 'x', 'p', 'C', 'D', 'r', 'cc', 'dd', 'dw', 'cw', 'dW', 'dt', 'ci"', "ci'", 'ci(', 'ciw', 'ci{', 'ci[', 'ca"', 'daw', 'v', 'V', 'iw', 'i(', 'i{', '"a', '<C-r>', 'ma', "'a", 'qa', '@a', '>>', '==', '>j', '<C-v>']) {
+    for (const key of ['0', '$', '^', 'w', 'b', 'e', 'f', 'F', 't', 'T', '%', 'G', 'gg', '/', 'n', '*', '#', ':s', ':%s', 'x', 'p', 'C', 'D', 'r', 'cc', 'dd', 'dw', 'cw', 'dW', 'dt', 'ci"', "ci'", 'ci(', 'ciw', 'ci{', 'ci[', 'ca"', 'daw', 'di(', 'da"', 'v', 'V', 'iw', 'i(', 'i{', '"a', '"_', '<C-r>', 'ma', "'a", "''", 'qa', '@a', 'J', 'yyp', 'guiw', '>>', '<<', '==', '>j', '<j', '>G', '<C-v>']) {
       expect(practiced, key).toContain(key);
     }
 
@@ -398,6 +412,7 @@ describe('Vim Dojo learning', () => {
   it('keeps most buffers short, and viewport cases long enough to scroll', () => {
     const viewportIds = new Set([
       'motion-11',
+      'motion-13',
       'operator-11',
       'text-object-08',
       'visual-06',
@@ -413,7 +428,7 @@ describe('Vim Dojo learning', () => {
       if (viewportIds.has(challenge.id)) {
         expect(lines.length, challenge.id).toBeGreaterThan(12);
         expect(lines.length, challenge.id).toBeLessThanOrEqual(24);
-        expect(challenge.intendedMove, challenge.id).toMatch(/^([G/*]|:%s)/);
+        expect(challenge.intendedMove, challenge.id).toMatch(/^(G|gg|\/|\*|:%s)/);
         continue;
       }
 
@@ -747,5 +762,83 @@ describe('Vim Dojo learning', () => {
     expect(suffix?.targetContent.split('\n').every((line) => line.endsWith(','))).toBe(true);
     expect(prefix?.concepts).toEqual(['Ctrl-v', 'I']);
     expect(suffix?.concepts).toEqual(['$', 'Ctrl-v', 'A']);
+  });
+
+  it('puts a yanked line above with a named register', () => {
+    const challenge = vimChallenges.find((entry) => entry.id === 'register-03');
+
+    expect(challenge?.initialCursor?.line).toBe(1);
+    expect(challenge?.targetContent.split('\n')[0]).toContain('retries');
+    expect(challenge?.concepts).toEqual(['"', 'yy', 'P']);
+  });
+
+  it('deletes through the black-hole register so a yank survives', () => {
+    const challenge = vimChallenges.find((entry) => entry.id === 'register-04');
+
+    expect(challenge?.initialContent).toContain('unused();');
+    expect(challenge?.targetContent).not.toContain('unused');
+    expect(challenge?.concepts).toContain('"_');
+  });
+
+  it('returns to the previous position after an end-of-file edit', () => {
+    const challenge = vimChallenges.find((entry) => entry.id === 'mark-03');
+
+    expect(challenge?.intendedMove).toBe("Gcw''cw");
+    expect(challenge?.targetContent).toBe(['delay = 3000;', 'retries = 3;', 'kept = 1;'].join('\n'));
+    expect(challenge?.concepts).toContain("''");
+  });
+
+  it('records an insert-at-start macro and replays it down the file', () => {
+    const challenge = vimChallenges.find((entry) => entry.id === 'macro-03');
+
+    expect(challenge?.targetContent.split('\n').every((line) => line.startsWith('const '))).toBe(true);
+    expect(challenge?.concepts).toEqual(['q', '@', 'I']);
+  });
+
+  it('outdents with << and indents through the end with >G', () => {
+    const outdent = vimChallenges.find((entry) => entry.id === 'format-04');
+    const two = vimChallenges.find((entry) => entry.id === 'format-05');
+    const rest = vimChallenges.find((entry) => entry.id === 'format-06');
+
+    expect(outdent?.intendedMove).toBe('<<');
+    expect(two?.intendedMove).toBe('<j');
+    expect(rest?.intendedMove).toBe('>G');
+    expect(rest?.targetContent).toBe(['return {', '  ok: true,', '  };'].join('\n'));
+  });
+
+  it('changes a visual-block column to a longer value', () => {
+    const challenge = vimChallenges.find((entry) => entry.id === 'multi-cursor-03');
+
+    expect(challenge?.targetContent.split('\n').every((line) => line.endsWith('null'))).toBe(true);
+    expect(challenge?.concepts).toEqual(['Ctrl-v', 'c']);
+  });
+
+  it('jumps to the top of a long buffer with gg', () => {
+    const challenge = vimChallenges.find((entry) => entry.id === 'motion-13');
+
+    expect(challenge?.initialContent.split('\n').length).toBeGreaterThan(12);
+    expect(challenge?.initialCursor?.line).toBe(challenge!.initialContent.split('\n').length - 1);
+    expect(challenge?.intendedMove).toBe('ggcw');
+    expect(challenge?.targetContent.startsWith('final')).toBe(true);
+  });
+
+  it('joins, duplicates, and lowercases with everyday operators', () => {
+    const join = vimChallenges.find((entry) => entry.id === 'operator-13');
+    const duplicate = vimChallenges.find((entry) => entry.id === 'operator-14');
+    const lower = vimChallenges.find((entry) => entry.id === 'operator-15');
+
+    expect(join?.targetContent).toBe("import { load } from './db';");
+    expect(duplicate?.targetContent.split('\n').filter((line) => line.includes('retries'))).toHaveLength(2);
+    expect(lower?.targetContent).toContain('api_url');
+  });
+
+  it('deletes inside parens and around quotes', () => {
+    const inside = vimChallenges.find((entry) => entry.id === 'text-object-10');
+    const around = vimChallenges.find((entry) => entry.id === 'text-object-11');
+
+    expect(inside?.targetContent).toBe('connect();');
+    expect(around?.targetContent).toBe('role: ,');
+    expect(inside?.concepts).toContain('di(');
+    expect(around?.concepts).toContain('da"');
   });
 });

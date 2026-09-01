@@ -35,4 +35,21 @@ export const markChallenges: Challenge[] = [
     ],
     intendedMove: "maggcw'acw",
   },
+  {
+    id: 'mark-03',
+    title: 'Jump back to the last place',
+    description: 'Change leftover to kept at the bottom, then rename timeout to delay where you started.',
+    category: 'mark',
+    difficulty: 'medium',
+    initialContent: ['timeout = 3000;', 'retries = 3;', 'leftover = 1;'].join('\n'),
+    targetContent: ['delay = 3000;', 'retries = 3;', 'kept = 1;'].join('\n'),
+    initialCursor: { line: 0, column: 0 },
+    concepts: ["''", 'G', 'cw'],
+    hints: [
+      'You will leave this line, edit the bottom, then return without setting a named mark.',
+      'Jump to the end and change leftover, then jump back to the previous position and change timeout.',
+      "Try `Gcw''cw`, typing kept then delay.",
+    ],
+    intendedMove: "Gcw''cw",
+  },
 ];

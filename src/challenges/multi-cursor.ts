@@ -35,4 +35,21 @@ export const multiCursorChallenges: Challenge[] = [
     ],
     intendedMove: '$<C-v>jjA',
   },
+  {
+    id: 'multi-cursor-03',
+    title: 'Change a column of values',
+    description: 'Replace each 0 with null in one visual-block change.',
+    category: 'multi-cursor',
+    difficulty: 'hard',
+    initialContent: ['ready: 0', 'debug: 0', 'cache: 0'].join('\n'),
+    targetContent: ['ready: null', 'debug: null', 'cache: null'].join('\n'),
+    initialCursor: { line: 0, column: 7 },
+    concepts: ['Ctrl-v', 'c'],
+    hints: [
+      'The same column on every line needs the same replacement text.',
+      'Select the column visually, change it, then type the new value once.',
+      'Try `<C-v>jjc` then type `null`.',
+    ],
+    intendedMove: '<C-v>jjc',
+  },
 ];
