@@ -1,6 +1,6 @@
-import type { Category, Challenge } from './challenges';
+import type { Category, Challenge } from "./challenges";
 
-export const PLAY_MODES = ['sequence', 'random', 'daily'] as const;
+export const PLAY_MODES = ["sequence", "random", "daily"] as const;
 export type PlayMode = (typeof PLAY_MODES)[number];
 
 export type PlaylistQuery = {
@@ -32,23 +32,24 @@ export function parseQuery(
   search: string | URLSearchParams,
   categories: readonly Category[],
 ): PlaylistQuery {
-  const params = typeof search === 'string' ? new URLSearchParams(search) : search;
-  const categoryParam = params.get('category');
+  const params =
+    typeof search === "string" ? new URLSearchParams(search) : search;
+  const categoryParam = params.get("category");
   const category =
     categoryParam && categories.includes(categoryParam as Category)
       ? (categoryParam as Category)
       : null;
 
-  const modeParam = params.get('mode');
+  const modeParam = params.get("mode");
   const mode: PlayMode =
-    params.has('daily') || modeParam === 'daily'
-      ? 'daily'
-      : modeParam === 'random'
-        ? 'random'
-        : 'sequence';
+    params.has("daily") || modeParam === "daily"
+      ? "daily"
+      : modeParam === "random"
+        ? "random"
+        : "sequence";
 
   return {
-    challenge: params.get('challenge') || null,
+    challenge: params.get("challenge") || null,
     category,
     mode,
   };
@@ -56,17 +57,21 @@ export function parseQuery(
 
 export function toSearchParams(query: PlaylistQuery): URLSearchParams {
   const params = new URLSearchParams();
-  if (query.mode === 'daily') params.set('mode', 'daily');
-  else if (query.mode === 'random') params.set('mode', 'random');
-  if (query.category && query.mode !== 'daily') params.set('category', query.category);
-  if (query.challenge) params.set('challenge', query.challenge);
+  if (query.mode === "daily") params.set("mode", "daily");
+  else if (query.mode === "random") params.set("mode", "random");
+  if (query.category && query.mode !== "daily")
+    params.set("category", query.category);
+  if (query.challenge) params.set("challenge", query.challenge);
   return params;
 }
 
 export function playlistUrl(basePath: string, query: PlaylistQuery): string {
-  const path = basePath.endsWith('/') && basePath.length > 1 ? basePath.slice(0, -1) : basePath;
+  const path =
+    basePath.endsWith("/") && basePath.length > 1
+      ? basePath.slice(0, -1)
+      : basePath;
   const qs = toSearchParams(query).toString();
-  return `${path || '/'}${qs ? `?${qs}` : ''}`;
+  return `${path || "/"}${qs ? `?${qs}` : ""}`;
 }
 
 export function utcDateString(date: Date): string {
@@ -82,7 +87,10 @@ export function hashString(value: string): number {
   return hash >>> 0;
 }
 
-export function dailyChallenge(challenges: readonly Challenge[], date: Date): Challenge | undefined {
+export function dailyChallenge(
+  challenges: readonly Challenge[],
+  date: Date,
+): Challenge | undefined {
   if (challenges.length === 0) return undefined;
   return challenges[hashString(utcDateString(date)) % challenges.length];
 }
@@ -101,7 +109,9 @@ export function shuffleUnsolved(
   rng: () => number = Math.random,
 ): Challenge[] {
   const completed = new Set(completedIds);
-  const unsolved = challenges.filter((challenge) => !completed.has(challenge.id));
+  const unsolved = challenges.filter(
+    (challenge) => !completed.has(challenge.id),
+  );
   const pool = unsolved.length > 0 ? unsolved : [...challenges];
   return fisherYates(pool, rng);
 }
@@ -127,17 +137,19 @@ export function createPlaylist(args: {
     reshuffle = false,
   } = args;
 
-  if (query.mode === 'daily') {
+  if (query.mode === "daily") {
     const today = dailyChallenge(challenges, now);
     // A daily URL with ?challenge= keeps that case after midnight; ?mode=daily alone is today.
-    const pinned = challenges.find((challenge) => challenge.id === query.challenge);
+    const pinned = challenges.find(
+      (challenge) => challenge.id === query.challenge,
+    );
     const current = pinned ?? today;
     const items = current ? [current] : [];
     const isToday = Boolean(current && today && current.id === today.id);
     return {
       items,
       index: 0,
-      query: { mode: 'daily', category: null, challenge: current?.id ?? null },
+      query: { mode: "daily", category: null, challenge: current?.id ?? null },
       shuffleIds: null,
       dailyDate: isToday ? utcDateString(now) : null,
     };
@@ -147,7 +159,7 @@ export function createPlaylist(args: {
   const category = scoped.length > 0 ? query.category : null;
   const pool = scoped.length > 0 ? scoped : [...challenges];
 
-  if (query.mode === 'random') {
+  if (query.mode === "random") {
     const known = new Set(pool.map((challenge) => challenge.id));
     const restored =
       !reshuffle && shuffleIds
@@ -157,12 +169,15 @@ export function createPlaylist(args: {
             return match ? [match] : [];
           })
         : [];
-    const items = restored.length > 0 ? restored : shuffleUnsolved(pool, completedIds, rng);
-    const index = pickIndex(items, query.challenge, lastChallengeId);
+    const items =
+      restored.length > 0 ? restored : shuffleUnsolved(pool, completedIds, rng);
+    const index = reshuffle
+      ? 0
+      : pickIndex(items, query.challenge, lastChallengeId);
     return {
       items,
       index,
-      query: { mode: 'random', category, challenge: items[index]?.id ?? null },
+      query: { mode: "random", category, challenge: items[index]?.id ?? null },
       shuffleIds: items.map((challenge) => challenge.id),
       dailyDate: null,
     };
@@ -172,7 +187,7 @@ export function createPlaylist(args: {
   return {
     items: pool,
     index,
-    query: { mode: 'sequence', category, challenge: pool[index]?.id ?? null },
+    query: { mode: "sequence", category, challenge: pool[index]?.id ?? null },
     shuffleIds: null,
     dailyDate: null,
   };
