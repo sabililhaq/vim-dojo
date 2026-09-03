@@ -4,7 +4,6 @@ export const vimDojoMarkup = `
     <div class="challenge-meta">
       <span class="challenge-id">
         <span data-challenge-count>Challenge 01</span>
-        <span data-passed hidden>done</span>
       </span>
       <span data-category></span>
     </div>
@@ -24,6 +23,7 @@ export const vimDojoMarkup = `
         <button type="button" class="secondary" data-previous-button>Previous</button>
         <button type="button" data-next-button>Next</button>
         <button type="button" class="secondary" data-shuffle-button hidden>Shuffle</button>
+        <span class="completion-mark" data-passed role="img" aria-label="Challenge not completed" title="Challenge not completed">○</span>
       </div>
 
       <div class="toast" data-toast hidden role="status" aria-live="polite">
@@ -50,10 +50,20 @@ export const vimDojoMarkup = `
     </div>
 
     <div class="playlist">
-      <nav class="playlist-row" data-modes aria-label="Practice mode"></nav>
       <p class="playlist-prompt">Want a specific category?</p>
       <nav class="playlist-row" data-categories aria-label="Challenge category"></nav>
     </div>
+
+    <aside class="trivia">
+      <span class="trivia-label">Custom vim command for this page</span>
+      <ul>
+        <li><code>:hint</code> / <code>:hi</code> Show a hint</li>
+        <li><code>:retry</code> / <code>:r</code> Retry the challenge</li>
+        <li><code>:previous</code> / <code>:p</code> Go to the previous challenge</li>
+        <li><code>:next</code> / <code>:n</code> Go to the next challenge</li>
+        <li><code>:shuffle</code> / <code>:sh</code> Jump to another challenge</li>
+      </ul>
+    </aside>
   </div>
 
   <div class="intro">

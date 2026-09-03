@@ -58,7 +58,6 @@ export function parseQuery(
 export function toSearchParams(query: PlaylistQuery): URLSearchParams {
   const params = new URLSearchParams();
   if (query.mode === "daily") params.set("mode", "daily");
-  else if (query.mode === "random") params.set("mode", "random");
   if (query.category && query.mode !== "daily")
     params.set("category", query.category);
   if (query.challenge) params.set("challenge", query.challenge);
@@ -169,8 +168,7 @@ export function createPlaylist(args: {
             return match ? [match] : [];
           })
         : [];
-    const items =
-      restored.length > 0 ? restored : shuffleUnsolved(pool, completedIds, rng);
+    const items = restored.length > 0 ? restored : fisherYates(pool, rng);
     const index = reshuffle
       ? 0
       : pickIndex(items, query.challenge, lastChallengeId);

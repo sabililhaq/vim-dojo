@@ -90,7 +90,7 @@ describe("playlist query", () => {
         category: "motion",
         challenge: "motion-02",
       }),
-    ).toBe("/vim?mode=random&category=motion&challenge=motion-02");
+    ).toBe("/vim?category=motion&challenge=motion-02");
     expect(
       playlistUrl("/vim", {
         mode: "daily",
@@ -147,7 +147,7 @@ describe("category play", () => {
 });
 
 describe("random review", () => {
-  it("prefers unsolved cases and does not reshuffle a restored list", () => {
+  it("keeps solved cases in a reshuffled list and restores its order", () => {
     const first = createPlaylist({
       challenges: sample,
       query: { mode: "random", category: null, challenge: null },
@@ -156,10 +156,11 @@ describe("random review", () => {
     });
 
     expect(first.items.map((challenge) => challenge.id)).toEqual([
-      "operator-01",
       "motion-02",
+      "operator-01",
+      "motion-01",
     ]);
-    expect(first.shuffleIds).toEqual(["operator-01", "motion-02"]);
+    expect(first.shuffleIds).toEqual(["motion-02", "operator-01", "motion-01"]);
 
     const restored = createPlaylist({
       challenges: sample,
@@ -169,10 +170,11 @@ describe("random review", () => {
     });
 
     expect(restored.items.map((challenge) => challenge.id)).toEqual([
-      "operator-01",
       "motion-02",
+      "operator-01",
+      "motion-01",
     ]);
-    expect(restored.index).toBe(1);
+    expect(restored.index).toBe(0);
   });
 
   it("reshuffles only when asked, and shuffles the full set once everything is done", () => {
