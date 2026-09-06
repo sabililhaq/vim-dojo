@@ -762,8 +762,33 @@ describe("Vim Dojo learning", () => {
     expect(template.indexOf("challenge-shell")).toBeLessThan(
       template.indexOf('class="intro"'),
     );
+    expect(template.indexOf("<h1 data-title>")).toBeLessThan(
+      template.indexOf('class="intro-title"'),
+    );
+    expect(template).not.toContain("<h2 data-title>");
+    expect(template).not.toContain("<h1>Vim Dojo</h1>");
     expect(styles).toContain(
       ".vim-dojo .intro {\n  border-top: 1px solid rgb(var(--vd-gray-light));",
+    );
+    expect(styles).toContain(".vim-dojo .intro-title");
+    expect(styles).toContain(".vim-dojo .challenge-shell h1");
+  });
+
+  it("labels the vim command panel and keeps control hit areas usable", () => {
+    const source = readFileSync(mountPath, "utf-8");
+    const template = readFileSync(templatePath, "utf-8");
+    const styles = readFileSync(stylesPath, "utf-8");
+
+    expect(source).toContain("function labelVimPanelInputs");
+    expect(source).toContain('.on("dialog", labelVimPanelInputs)');
+    expect(source).toContain('cm?.off("dialog", labelVimPanelInputs)');
+    expect(source).toContain('"Vim command"');
+    expect(source).toContain('"Vim search"');
+    expect(template).toContain('aria-atomic="true"');
+    expect(styles).toContain("min-height: 44px");
+    expect(styles).toContain("@media (pointer: coarse)");
+    expect(styles).toContain(
+      ".vim-dojo .actions button[disabled]:hover",
     );
   });
 

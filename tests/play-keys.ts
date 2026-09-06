@@ -30,7 +30,7 @@ const emptyRect = {
 
 let layoutInstalled = false;
 
-function installJsdomLayout(): void {
+export function installJsdomLayout(): void {
   if (layoutInstalled) return;
   layoutInstalled = true;
 

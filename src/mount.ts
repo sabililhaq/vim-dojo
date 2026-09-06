@@ -635,7 +635,24 @@ export function mountVimDojo(
     });
 
     setInitialCursor(challenge);
+    getCM(view)?.on("dialog", labelVimPanelInputs);
     view.focus();
+  }
+
+  function labelVimPanelInputs(): void {
+    const cm = view ? getCM(view) : null;
+    const dialog = cm?.state.dialog;
+    const input =
+      (dialog instanceof HTMLElement ? dialog.querySelector("input") : null) ??
+      view?.dom.querySelector(".cm-vim-panel input") ??
+      null;
+    if (!(input instanceof HTMLInputElement)) return;
+
+    const prefix = (input.previousSibling?.textContent ?? "").trim();
+    input.setAttribute(
+      "aria-label",
+      prefix === "/" || prefix === "?" ? "Vim search" : "Vim command",
+    );
   }
 
   function onWindowMouseUp(): void {
@@ -674,6 +691,8 @@ export function mountVimDojo(
   function unmount(): void {
     cancelAutoContinue();
     window.removeEventListener("mouseup", onWindowMouseUp);
+    const cm = view ? getCM(view) : null;
+    cm?.off("dialog", labelVimPanelInputs);
     view?.destroy();
     view = undefined;
     root.replaceChildren();

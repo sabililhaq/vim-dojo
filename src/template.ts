@@ -7,7 +7,7 @@ export const vimDojoMarkup = `
       </span>
       <span data-category></span>
     </div>
-    <h2 data-title>Loading Vim Dojo</h2>
+    <h1 data-title>Loading Vim Dojo</h1>
     <p data-description>Preparing the editor.</p>
 
     <div class="editor-wrap">
@@ -26,7 +26,7 @@ export const vimDojoMarkup = `
         <span class="completion-mark" data-passed role="img" aria-label="Challenge not completed" title="Challenge not completed">○</span>
       </div>
 
-      <div class="toast" data-toast hidden role="status" aria-live="polite">
+      <div class="toast" data-toast hidden role="status" aria-live="polite" aria-atomic="true">
         <p data-result-message></p>
         <p class="attempt-stats">
           <span data-method></span>
@@ -67,7 +67,7 @@ export const vimDojoMarkup = `
   </div>
 
   <div class="intro">
-    <h1>Vim Dojo</h1>
+    <p class="intro-title">Vim Dojo</p>
     <p class="tagline">Practice Vim. Don't learn Vim.</p>
     <p>
       This is not a beginner Vim tutorial. You should already know Normal mode,
