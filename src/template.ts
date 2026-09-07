@@ -42,7 +42,10 @@ export const vimDojoMarkup = `
       </div>
     </div>
 
-    <div class="hint" data-hint hidden></div>
+    <div class="hint" data-hint hidden aria-live="polite">
+      <p data-hint-text></p>
+      <p class="hint-ghost" data-hint-ghost hidden></p>
+    </div>
 
     <div class="progress">
       <span data-progress>01 / 08</span>

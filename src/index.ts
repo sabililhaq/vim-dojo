@@ -14,11 +14,19 @@ export {
   type Playlist,
   type PlaylistQuery,
 } from './playlist';
-export { classifyAttempt, methodLabel, type Method } from './classifier';
 export {
+  classifyAttempt,
+  countsAsPracticed,
+  methodLabel,
+  type Method,
+} from './classifier';
+export { parFor, practiceKeyCount, tokenizeKeys } from './keys';
+export {
+  changedSpan,
   contentDiffSize,
   isChallengeComplete,
   normalizeChallengeContent,
+  type ContentSpan,
 } from './validator';
 export {
   summarizeTelemetry,

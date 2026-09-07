@@ -2,9 +2,18 @@ import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { challengeSets, vimChallenges } from "../src/challenges";
-import { classifyAttempt, methodLabel } from "../src/classifier";
+import {
+  classifyAttempt,
+  countsAsPracticed,
+  methodLabel,
+} from "../src/classifier";
+import { parFor, practiceKeyCount, tokenizeKeys } from "../src/keys";
 import { summarizeTelemetry, type InteractionEvent } from "../src/telemetry";
-import { contentDiffSize, isChallengeComplete } from "../src/validator";
+import {
+  changedSpan,
+  contentDiffSize,
+  isChallengeComplete,
+} from "../src/validator";
 
 const mountPath = fileURLToPath(new URL("../src/mount.ts", import.meta.url));
 const templatePath = fileURLToPath(
@@ -52,6 +61,7 @@ describe("Vim Dojo", () => {
     expect(source).toContain("vim()");
     expect(source).toContain("EditorState.allowMultipleSelections.of(true)");
     expect(source).toContain("EditorView.updateListener.of(onEditorUpdate)");
+    expect(source).toContain("targetHighlightField");
     expect(source).not.toContain("defaultKeymap");
     expect(source).toContain("forceNormalMode");
     expect(source).toContain('localStorage.getItem("vim-dojo:lastChallenge")');
@@ -295,6 +305,58 @@ describe("Vim Dojo", () => {
     expect(methodLabel("paste")).toBe("Paste");
   });
 
+  it("counts only vim and mostly-vim as practiced", () => {
+    expect(countsAsPracticed("vim")).toBe(true);
+    expect(countsAsPracticed("mostly-vim")).toBe(true);
+    expect(countsAsPracticed("mixed")).toBe(false);
+    expect(countsAsPracticed("manual")).toBe(false);
+    expect(countsAsPracticed("paste")).toBe(false);
+  });
+
+  it("treats intendedMove tokens as par and skips insert and modifier keys", () => {
+    expect(tokenizeKeys("<C-v>jjIreq.<Esc>")).toEqual([
+      "<C-v>",
+      "j",
+      "j",
+      "I",
+      "r",
+      "e",
+      "q",
+      ".",
+      "<Esc>",
+    ]);
+    expect(parFor("0cw")).toBe(3);
+    expect(parFor("/legacycw")).toBe(9);
+    expect(parFor("<C-v>jjr")).toBe(4);
+    expect(parFor(undefined)).toBe(1);
+
+    expect(
+      practiceKeyCount([
+        { type: "key", key: "0", mode: "normal", t: 1 },
+        { type: "key", key: "c", mode: "normal", t: 2 },
+        { type: "key", key: "w", mode: "normal", t: 3 },
+        { type: "key", key: "t", mode: "insert", t: 4 },
+        { type: "key", key: "Shift", mode: "normal", t: 5 },
+        { type: "key", key: "Enter", mode: "normal", t: 6 },
+        { type: "key", key: "Escape", mode: "insert", t: 7 },
+      ]),
+    ).toBe(3);
+  });
+
+  it("highlights the changed span in the current buffer, including insertions", () => {
+    expect(
+      changedSpan(
+        'debugLogger.info("ready");',
+        'traceLogger.info("ready");',
+      ),
+    ).toEqual({ from: 0, to: 5 });
+    expect(changedSpan("const retries = 3", "const retries = 3;")).toEqual({
+      from: 16,
+      to: 17,
+    });
+    expect(changedSpan("same", "same")).toBeNull();
+  });
+
   it("summarizes telemetry so learning feedback can score keys vs mouse vs paste", () => {
     const snapshot = summarizeTelemetry([
       { type: "key", key: "d", mode: "normal", t: 1 },
@@ -394,6 +456,9 @@ describe("Vim Dojo", () => {
     expect(byId["operator-15"]?.intendedMove).toBe("guiw");
     expect(byId["text-object-10"]?.intendedMove).toBe("di(");
     expect(byId["text-object-11"]?.intendedMove).toBe('da"');
+    expect(byId["motion-14"]?.intendedMove).toBe("3wcw");
+    expect(byId["operator-16"]?.intendedMove).toBe("2dd");
+    expect(byId["operator-17"]?.intendedMove).toBe("2dw");
   });
 });
 
@@ -486,6 +551,9 @@ describe("Vim Dojo learning", () => {
       "<j",
       ">G",
       "<C-v>",
+      "3w",
+      "2dd",
+      "2dw",
     ]) {
       expect(practiced, key).toContain(key);
     }
@@ -803,7 +871,14 @@ describe("Vim Dojo learning", () => {
     );
     expect(template).toContain("data-hint-button");
     expect(template).toContain("data-hint");
+    expect(template).toContain("data-hint-text");
+    expect(template).toContain("data-hint-ghost");
     expect(source).toContain("function renderHint");
+    expect(source).toContain("applyTargetHighlight");
+    expect(source).toContain("Next key: ${ghostToken}");
+    expect(source).toContain("${keys} keys · par ${par}");
+    expect(source).toContain("countsAsPracticed(method)");
+    expect(source).toContain("Solved. Par ${par}, you used ${keys}.");
     expect(source).toContain(
       "return challenge.intendedMove\n      ? `${challenge.intendedMove} was the intended move.`",
     );
@@ -852,13 +927,19 @@ describe("Vim Dojo learning", () => {
     expect(roadmap).toContain("?mode=random");
     expect(roadmap).toContain("?mode=daily");
     expect(roadmap).toMatch(/Ghost the next character/);
+    expect(roadmap).toMatch(/N keys · par P/);
+    expect(roadmap).toMatch(/3w/);
     expect(roadmap).toMatch(/No accounts/);
     expect(roadmap).toMatch(/## Shipped/);
     expect(roadmap.indexOf("## Next")).toBeLessThan(
       roadmap.indexOf("## Shipped"),
     );
-    expect(roadmap.indexOf("Interactive hints")).toBeLessThan(
-      roadmap.indexOf("## Shipped"),
+    expect(roadmap.indexOf("## Shipped")).toBeLessThan(
+      roadmap.indexOf("### Interactive hints"),
+    );
+    expect(roadmap.indexOf("## Shipped")).toBeLessThan(roadmap.indexOf("### Par"));
+    expect(roadmap.indexOf("## Shipped")).toBeLessThan(
+      roadmap.indexOf("### Counts"),
     );
   });
 
@@ -1279,5 +1360,20 @@ describe("Vim Dojo learning", () => {
     expect(around?.targetContent).toBe("role: ,");
     expect(inside?.concepts).toContain("di(");
     expect(around?.concepts).toContain('da"');
+  });
+
+  it("teaches counted motions and operators", () => {
+    const words = vimChallenges.find((entry) => entry.id === "motion-14");
+    const lines = vimChallenges.find((entry) => entry.id === "operator-16");
+    const deleteWords = vimChallenges.find(
+      (entry) => entry.id === "operator-17",
+    );
+
+    expect(words?.initialCursor).toEqual({ line: 0, column: 0 });
+    expect(words?.targetContent).toContain("delay");
+    expect(lines?.initialContent.split("\n")).toHaveLength(4);
+    expect(lines?.initialCursor?.line).toBe(1);
+    expect(deleteWords?.initialCursor?.column).toBe(7);
+    expect(deleteWords?.targetContent).toBe("return value;");
   });
 });

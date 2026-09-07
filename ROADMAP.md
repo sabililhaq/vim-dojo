@@ -6,24 +6,33 @@ No accounts. No leaderboards. No skill trees.
 
 ## Next
 
+### Guided replay
+
+After the last hint, optionally play the intended keys as a replay you can retry against.
+
+Wrong-key nudge (optional): if the first key is not a prefix of `intendedMove` and not `Esc` / undo, flash the target again. Never auto-type the solution.
+
+## Shipped
+
 ### Interactive hints
 
 Text hints stay. They are the first layer.
 
-Interactive hints are the next layer: they teach *in the buffer*, not in a paragraph.
-
 | Layer | What it does |
 | --- | --- |
-| 1. Text | Current behavior. Direction, then intended keys. |
-| 2. Target | Highlight the span that must change. No keys revealed. |
+| 1. Text | Direction, then intended keys. |
+| 2. Target | Highlight the span that must change. No keys revealed on the first Hint. |
 | 3. Next key | Ghost the next character of `intendedMove` after another Hint press. Advance one key at a time. |
-| 4. Guided replay | After the last hint, optionally play the intended keys as a replay you can retry against. |
 
-Wrong-key nudge (optional, later): if the first key is not a prefix of `intendedMove` and not `Esc` / undo, flash the target again. Never auto-type the solution.
+Interactive hints work from the existing `hints`, `intendedMove`, `initialCursor`, and `targetContent` fields. Challenge authors do not write a second hint format.
 
-Interactive hints must work from the existing `hints`, `intendedMove`, `initialCursor`, and `targetContent` fields. Challenge authors should not have to write a second hint format.
+### Par
 
-## Shipped
+A Vim solve is scored against `intendedMove`. The toast shows `N keys · par P`. Insert-mode typing, Enter, and Escape do not count. Paste and mouse solves still complete the buffer, but they do not get a ✓.
+
+### Counts
+
+Counted motions and operators (`3w`, `2dd`, `2dw`) are in the set.
 
 ### Play by category
 
@@ -51,9 +60,6 @@ A daily URL that includes `?challenge=` keeps that case after midnight. Open `?m
 
 ## Later
 
-Only after interactive hints exist.
-
-- Counts (`3w`, `2dd`). Search, replace, registers, marks, macros, formatting, and visual-block insert already have their own files.
 - Harder cases. Most of the set is easy on purpose.
 - Concept review: "practice `daw` again" from the cases that already list it in `concepts`.
 - Host options for the site embed: default mode, hide the intro, start on today's daily.
@@ -67,4 +73,4 @@ Only after interactive hints exist.
 
 ## Suggested order
 
-1. Interactive hints, starting with target highlight, then next-key ghosts.
+1. Guided replay of `intendedMove`, then a wrong-key nudge that flashes the target.

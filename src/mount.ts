@@ -8,7 +8,18 @@ import {
   type Category,
   type Challenge,
 } from "./challenges";
-import { classifyAttempt, methodLabel, type Method } from "./classifier";
+import {
+  classifyAttempt,
+  countsAsPracticed,
+  methodLabel,
+  type Method,
+} from "./classifier";
+import {
+  targetHighlightEffect,
+  targetHighlightField,
+  setTargetHighlight,
+} from "./highlight";
+import { parFor, practiceKeyCount, tokenizeKeys } from "./keys";
 import {
   categoriesIn,
   createPlaylist,
@@ -64,6 +75,8 @@ export function mountVimDojo(
     keystrokes: dojo?.querySelector<HTMLElement>("[data-keystrokes]"),
     time: dojo?.querySelector<HTMLElement>("[data-time]"),
     hint: dojo?.querySelector<HTMLElement>("[data-hint]"),
+    hintText: dojo?.querySelector<HTMLElement>("[data-hint-text]"),
+    hintGhost: dojo?.querySelector<HTMLElement>("[data-hint-ghost]"),
     hintButton: dojo?.querySelector<HTMLButtonElement>("[data-hint-button]"),
     retryButton: dojo?.querySelector<HTMLButtonElement>("[data-retry-button]"),
     nextButton: dojo?.querySelector<HTMLButtonElement>("[data-next-button]"),
@@ -450,10 +463,13 @@ export function mountVimDojo(
     setText(els.title, challenge.title);
     setText(els.description, challenge.description);
     setText(els.progress, progressLabel());
-    setText(els.hint, "");
+    setText(els.hintText, "");
+    setText(els.hintGhost, "");
     setText(els.nextButton, "Next");
     els.hint?.setAttribute("hidden", "");
+    els.hintGhost?.setAttribute("hidden", "");
     els.toast?.setAttribute("hidden", "");
+    clearTargetHighlight();
     els.previousButton?.toggleAttribute("hidden", daily);
     els.nextButton?.toggleAttribute("hidden", daily);
     els.shuffleButton?.removeAttribute("hidden");
@@ -482,30 +498,65 @@ export function mountVimDojo(
     }
   }
 
+  function clearTargetHighlight(): void {
+    view?.dispatch({ effects: setTargetHighlight.of(null) });
+  }
+
+  function applyTargetHighlight(): void {
+    if (!view) return;
+    view.dispatch({
+      effects: targetHighlightEffect(
+        view.state.doc.toString(),
+        currentChallenge().targetContent,
+      ),
+    });
+  }
+
   function renderHint(): void {
     const challenge = currentChallenge();
-    if (!challenge.hints?.length) return;
+    const texts = challenge.hints ?? [];
+    const tokens = tokenizeKeys(challenge.intendedMove ?? "");
+    if (texts.length === 0 && tokens.length === 0) return;
 
-    const hint =
-      challenge.hints[Math.min(hintIndex, challenge.hints.length - 1)];
-    setText(els.hint, hint ?? "");
+    if (hintIndex === 0) applyTargetHighlight();
+
+    const text = texts[Math.min(hintIndex, Math.max(0, texts.length - 1))] ?? "";
+    setText(els.hintText, text);
+
+    const ghostToken = hintIndex > 0 ? tokens[hintIndex - 1] : undefined;
+    if (ghostToken) {
+      setText(els.hintGhost, `Next key: ${ghostToken}`);
+      els.hintGhost?.removeAttribute("hidden");
+    } else {
+      setText(els.hintGhost, "");
+      els.hintGhost?.setAttribute("hidden", "");
+    }
+
     els.hint?.removeAttribute("hidden");
     hintIndex += 1;
 
-    if (hintIndex >= challenge.hints.length) {
+    const moreText = hintIndex < texts.length;
+    const moreGhost = hintIndex <= tokens.length;
+    if (!moreText && !moreGhost) {
       els.hintButton?.setAttribute("disabled", "");
     }
 
     view?.focus();
   }
 
-  function completionMessage(method: Method, challenge: Challenge): string {
+  function completionMessage(
+    method: Method,
+    challenge: Challenge,
+    keys: number,
+    par: number,
+  ): string {
     if (method === "paste")
       return "You pasted the solution. Nothing wrong with that, but this dojo is for practicing Vim.";
     if (method === "manual" || method === "mixed")
       return "You solved it, but you missed some Vim practice.";
     if (method === "mostly-vim")
       return "Solved. One mouse interaction nudged this into mostly Vim.";
+    if (keys > par) return `Solved. Par ${par}, you used ${keys}.`;
     return challenge.intendedMove
       ? `${challenge.intendedMove} was the intended move.`
       : "Nice.";
@@ -525,11 +576,12 @@ export function mountVimDojo(
     const seconds = ((completedAt - (startedAt ?? completedAt)) / 1000).toFixed(
       2,
     );
-    const keyEvents = events.filter((event) => event.type === "key").length;
+    const par = parFor(challenge.intendedMove);
+    const keys = practiceKeyCount(events);
 
-    setText(els.resultMessage, completionMessage(method, challenge));
+    setText(els.resultMessage, completionMessage(method, challenge, keys, par));
     setText(els.method, `Method: ${methodLabel(method)}`);
-    setText(els.keystrokes, `${keyEvents} keystrokes`);
+    setText(els.keystrokes, `${keys} keys · par ${par}`);
     setText(els.time, `${seconds}s`);
     els.toast?.removeAttribute("hidden");
 
@@ -540,21 +592,23 @@ export function mountVimDojo(
       startAutoContinue();
     }
 
-    try {
-      window.localStorage.setItem(
-        "vim-dojo:completed",
-        JSON.stringify(
-          Array.from(new Set([...readCompletedIds(), challenge.id])),
-        ),
-      );
-      if (playlist.dailyDate) {
+    if (countsAsPracticed(method)) {
+      try {
         window.localStorage.setItem(
-          `vim-dojo:daily:${playlist.dailyDate}`,
-          challenge.id,
+          "vim-dojo:completed",
+          JSON.stringify(
+            Array.from(new Set([...readCompletedIds(), challenge.id])),
+          ),
         );
+        if (playlist.dailyDate) {
+          window.localStorage.setItem(
+            `vim-dojo:daily:${playlist.dailyDate}`,
+            challenge.id,
+          );
+        }
+      } catch {
+        // Progress persistence is optional for the MVP.
       }
-    } catch {
-      // Progress persistence is optional for the MVP.
     }
 
     updatePassedMark();
@@ -596,6 +650,7 @@ export function mountVimDojo(
           history(),
           drawSelection(),
           javascript(),
+          targetHighlightField,
           EditorState.allowMultipleSelections.of(true),
           EditorView.lineWrapping,
           // Match host dark/light so CM panels/search chrome aren't stuck on light defaults.

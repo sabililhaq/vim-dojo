@@ -4,6 +4,9 @@ import { EditorSelection, EditorState } from '@codemirror/state';
 import { drawSelection, EditorView } from '@codemirror/view';
 import { getCM, vim, Vim } from '@replit/codemirror-vim';
 import type { Position } from '../src/challenges/types';
+import { tokenizeKeys } from '../src/keys';
+
+export { tokenizeKeys };
 
 type VimCm = NonNullable<ReturnType<typeof getCM>> & {
   replaceSelection(text: string): void;
@@ -59,22 +62,6 @@ export function installJsdomLayout(): void {
     const next = doc.line(nextNumber);
     return EditorSelection.cursor(Math.min(next.from + col, next.to), start.assoc, undefined, col);
   };
-}
-
-export function tokenizeKeys(sequence: string): string[] {
-  const keys: string[] = [];
-  for (let i = 0; i < sequence.length; i += 1) {
-    if (sequence[i] === '<') {
-      const end = sequence.indexOf('>', i + 1);
-      if (end !== -1 && end - i < 12) {
-        keys.push(sequence.slice(i, end + 1));
-        i = end;
-        continue;
-      }
-    }
-    keys.push(sequence[i]!);
-  }
-  return keys;
 }
 
 function createEditor(content: string, cursor: Position): { view: EditorView; cm: VimCm } {

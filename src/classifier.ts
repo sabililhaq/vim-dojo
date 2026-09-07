@@ -36,3 +36,7 @@ export function methodLabel(method: Method): string {
 
   return labels[method];
 }
+
+export function countsAsPracticed(method: Method): boolean {
+  return method === 'vim' || method === 'mostly-vim';
+}

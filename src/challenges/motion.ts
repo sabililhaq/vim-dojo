@@ -284,4 +284,21 @@ export const motionChallenges: Challenge[] = [
     ],
     intendedMove: 'ggcw',
   },
+  {
+    id: 'motion-14',
+    title: 'Count a word jump',
+    description: 'Skip ahead three words and change timeout to delay.',
+    category: 'motion',
+    difficulty: 'medium',
+    initialContent: 'const unused leftover timeout = 5;',
+    targetContent: 'const unused leftover delay = 5;',
+    initialCursor: { line: 0, column: 0 },
+    concepts: ['3w', 'cw'],
+    hints: [
+      'The word you need is three words ahead. Do not tap w three times.',
+      'A count belongs on the motion, then change the word.',
+      'Try `3wcwdelay`.',
+    ],
+    intendedMove: '3wcw',
+  },
 ];

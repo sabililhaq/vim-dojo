@@ -26,9 +26,12 @@ const advancedReplays: Record<string, string> = {
   'multi-cursor-02': '$<C-v>jjA,<Esc>',
   'multi-cursor-03': '<C-v>jjcnull<Esc>',
   'motion-13': 'ggcwfinal<Esc>',
+  'motion-14': '3wcwdelay<Esc>',
   'operator-13': 'J',
   'operator-14': 'yyp',
   'operator-15': 'guiw',
+  'operator-16': '2dd',
+  'operator-17': '2dw',
   'text-object-10': 'di(',
   'text-object-11': 'da"',
 };

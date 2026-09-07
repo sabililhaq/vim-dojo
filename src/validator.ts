@@ -1,5 +1,39 @@
+export type ContentSpan = {
+  from: number;
+  to: number;
+};
+
 export function normalizeChallengeContent(content: string): string {
   return content.replace(/\r\n?/g, '\n').trim();
+}
+
+export function changedSpan(
+  currentContent: string,
+  targetContent: string,
+): ContentSpan | null {
+  const current = currentContent.replace(/\r\n?/g, '\n');
+  const target = targetContent.replace(/\r\n?/g, '\n');
+  if (current === target) return null;
+
+  let prefix = 0;
+  const maxPrefix = Math.min(current.length, target.length);
+  while (prefix < maxPrefix && current[prefix] === target[prefix]) prefix += 1;
+
+  let suffix = 0;
+  while (
+    suffix < current.length - prefix &&
+    suffix < target.length - prefix &&
+    current[current.length - 1 - suffix] === target[target.length - 1 - suffix]
+  ) {
+    suffix += 1;
+  }
+
+  const from = prefix;
+  const to = current.length - suffix;
+  if (from < to) return { from, to };
+  if (from < current.length) return { from, to: from + 1 };
+  if (from > 0) return { from: from - 1, to: from };
+  return null;
 }
 
 export function isChallengeComplete(currentContent: string, targetContent: string): boolean {
