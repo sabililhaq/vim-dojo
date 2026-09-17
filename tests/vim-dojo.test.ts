@@ -155,9 +155,7 @@ describe("Vim Dojo", () => {
     expect(template).toContain("data-auto-continue");
     expect(template).toContain("data-toast");
     expect(styles).toContain(".vim-dojo .toast {");
-    expect(styles).toContain("position: fixed");
-    expect(styles).toContain("env(safe-area-inset-bottom");
-    expect(styles).toContain("backdrop-filter: blur(12px)");
+    expect(styles).not.toContain("position: fixed");
     expect(source).toContain("const AUTO_CONTINUE_MS = 5000");
     expect(source).toContain("function startAutoContinue");
     expect(source).toContain("Continuing in ${seconds}s");
@@ -876,7 +874,7 @@ describe("Vim Dojo learning", () => {
     expect(source).toContain("function renderHint");
     expect(source).toContain("applyTargetHighlight");
     expect(source).toContain("Next key: ${ghostToken}");
-    expect(source).toContain("${keys} keys · par ${par}");
+    expect(source).toContain("${keys} command keys · par ${par}");
     expect(source).toContain("countsAsPracticed(method)");
     expect(source).toContain("Solved. Par ${par}, you used ${keys}.");
     expect(source).toContain(

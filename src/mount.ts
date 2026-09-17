@@ -191,6 +191,7 @@ export function mountVimDojo(
 
   function applyPlaylist(query: PlaylistQuery, reshuffle = false): void {
     playlist = buildPlaylist(query, reshuffle);
+    pushChallengeHistory();
     renderChallenge();
   }
 
@@ -339,6 +340,7 @@ export function mountVimDojo(
       index,
       query: { ...playlist.query, challenge: challenge?.id ?? null },
     };
+    pushChallengeHistory();
     renderChallenge();
   }
 
@@ -362,6 +364,7 @@ export function mountVimDojo(
       index,
       query: { ...playlist.query, challenge: challenge?.id ?? null },
     };
+    pushChallengeHistory();
     renderChallenge();
   }
 
@@ -404,6 +407,20 @@ export function mountVimDojo(
 
   function challengeUrl(id: string): string {
     return playlistUrl(basePath, { ...playlist.query, challenge: id });
+  }
+
+  function pushChallengeHistory(): void {
+    const url = new URL(challengeUrl(currentChallenge().id), window.location.href);
+    if (url.href !== window.location.href) {
+      window.history.pushState(window.history.state, "", url);
+    }
+  }
+
+  function onPopState(): void {
+    const path = new URL(basePath, window.location.href).pathname.replace(/\/$/, "");
+    if (window.location.pathname.replace(/\/$/, "") !== path) return;
+    playlist = buildPlaylist(parseQuery(window.location.search, categories), false);
+    renderChallenge();
   }
 
   function setPlaylistRow(
@@ -492,7 +509,7 @@ export function mountVimDojo(
       view.focus();
     }
 
-    window.history.replaceState(null, "", challengeUrl(challenge.id));
+    window.history.replaceState(window.history.state, "", challengeUrl(challenge.id));
     try {
       window.localStorage.setItem("vim-dojo:lastChallenge", challenge.id);
     } catch {
@@ -583,7 +600,7 @@ export function mountVimDojo(
 
     setText(els.resultMessage, completionMessage(method, challenge, keys, par));
     setText(els.method, `Method: ${methodLabel(method)}`);
-    setText(els.keystrokes, `${keys} keys · par ${par}`);
+    setText(els.keystrokes, `${keys} command keys · par ${par}`);
     setText(els.time, `${seconds}s`);
     els.toast?.removeAttribute("hidden");
 
@@ -750,6 +767,7 @@ export function mountVimDojo(
   function unmount(): void {
     cancelAutoContinue();
     window.removeEventListener("mouseup", onWindowMouseUp);
+    window.removeEventListener("popstate", onPopState);
     const cm = view ? getCM(view) : null;
     cm?.off("dialog", labelVimPanelInputs);
     view?.destroy();
@@ -791,6 +809,7 @@ export function mountVimDojo(
       goToAnotherChallenge();
     });
     els.categories?.addEventListener("click", onPlaylistClick);
+    window.addEventListener("popstate", onPopState);
   } catch (error) {
     console.error(error);
     els.error?.removeAttribute("hidden");

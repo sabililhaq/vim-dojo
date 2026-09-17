@@ -40,7 +40,7 @@ function solve() {
 it('captures Vim keys before they are consumed, including the completing key', () => {
   solve();
   expect(root.querySelector('.cm-content')?.textContent).toBe('c');
-  expect(root.querySelector('[data-keystrokes]')?.textContent).toBe('2 keys · par 2');
+  expect(root.querySelector('[data-keystrokes]')?.textContent).toBe('2 command keys · par 2');
   expect(root.querySelector('[data-time]')?.textContent).toBe('1.00s');
 });
 
@@ -66,4 +66,30 @@ it('replays the first challenge final hint to the exact target', () => {
   const challenge = motionChallenges[0]!;
   const keys = challenge.hints!.at(-1)!.match(/`([^`]+)`/)![1]!;
   expect(playKeys({ content: challenge.initialContent, cursor: challenge.initialCursor!, keys })).toBe(challenge.targetContent);
+});
+
+
+it('adds history for navigation but not retry, and restores on popstate', () => {
+  const push = vi.spyOn(window.history, 'pushState');
+  root.querySelector<HTMLButtonElement>('[data-next-button]')!.click();
+  expect(push).toHaveBeenCalledTimes(1);
+  expect(window.location.search).toContain('motion-02');
+  root.querySelector<HTMLButtonElement>('[data-retry-button]')!.click();
+  expect(push).toHaveBeenCalledTimes(1);
+  window.history.replaceState({ host: 'preserved' }, '', '/?challenge=motion-01');
+  window.dispatchEvent(new PopStateEvent('popstate'));
+  expect(root.querySelector('[data-title]')?.textContent).toBe('Start of line');
+  expect(window.history.state).toEqual({ host: 'preserved' });
+  expect(push).toHaveBeenCalledTimes(1);
+});
+
+it('stops countdowns on history navigation and ignores other host routes', () => {
+  solve();
+  window.history.replaceState(null, '', '/?challenge=motion-01');
+  window.dispatchEvent(new PopStateEvent('popstate'));
+  vi.advanceTimersByTime(6000);
+  expect(root.querySelector('[data-title]')?.textContent).toBe('Start of line');
+  window.history.replaceState(null, '', '/about');
+  window.dispatchEvent(new PopStateEvent('popstate'));
+  expect(window.location.pathname).toBe('/about');
 });

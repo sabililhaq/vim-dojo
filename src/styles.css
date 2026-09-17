@@ -293,21 +293,15 @@
 }
 
 .vim-dojo .toast {
-  position: fixed;
-  left: 50%;
-  bottom: max(1rem, env(safe-area-inset-bottom, 0px));
-  z-index: 20;
   box-sizing: border-box;
-  width: min(42rem, calc(100vw - 2rem));
-  transform: translateX(-50%);
+  margin-top: 0.5rem;
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
   padding: 0.7rem 0.85rem;
   border: 1px solid rgb(var(--vd-gray-light));
   border-radius: 6px;
-  background: color-mix(in srgb, rgb(var(--vd-bg)) 88%, transparent);
-  backdrop-filter: blur(12px);
+  background: rgb(var(--vd-surface));
   color: rgb(var(--vd-gray-dark));
   animation: dojo-toast-in 180ms ease-out;
 }
@@ -426,11 +420,11 @@
 @keyframes dojo-toast-in {
   from {
     opacity: 0;
-    transform: translate(-50%, 10px);
+    transform: translateY(6px);
   }
   to {
     opacity: 1;
-    transform: translate(-50%, 0);
+    transform: translateY(0);
   }
 }
 
@@ -442,7 +436,7 @@
 
   .vim-dojo .toast {
     animation: none;
-    transform: translateX(-50%);
+    transform: none;
   }
 }
 
@@ -481,4 +475,32 @@
 
 .vim-dojo .auto-advance-preference input {
   accent-color: var(--vd-accent);
+}
+
+.vim-dojo .trivia summary {
+  cursor: pointer;
+  padding: 0.35rem 0;
+}
+
+.vim-dojo .trivia summary:focus-visible {
+  outline: 2px solid var(--vd-accent);
+  outline-offset: 4px;
+}
+
+.vim-dojo .shortcut-description,
+.vim-dojo .toast .scoring-note {
+  color: rgb(var(--vd-gray));
+  font-size: 0.78rem;
+}
+
+.vim-dojo .keyboard-notice {
+  display: none;
+}
+
+@media (pointer: coarse) {
+  .vim-dojo .challenge-shell > .keyboard-notice {
+    display: block;
+    color: rgb(var(--vd-gray));
+    font-size: 0.82rem;
+  }
 }

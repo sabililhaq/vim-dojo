@@ -10,6 +10,8 @@ export const vimDojoMarkup = `
     <h1 data-title>Loading Vim Dojo</h1>
     <p data-description>Preparing the editor.</p>
 
+    <p class="keyboard-notice">Physical keyboard recommended for Vim practice.</p>
+
     <div class="editor-wrap">
       <div data-editor></div>
     </div>
@@ -38,6 +40,7 @@ export const vimDojoMarkup = `
           <span data-keystrokes></span>
           <span data-time></span>
         </p>
+        <p class="scoring-note">Par counts command keys; inserted text and modifier keys are excluded.</p>
         <div class="auto-continue" data-auto-continue hidden>
           <span class="auto-continue-track" aria-hidden="true">
             <span class="auto-continue-fill"></span>
@@ -62,8 +65,9 @@ export const vimDojoMarkup = `
       <nav class="playlist-row" data-categories aria-label="Challenge category"></nav>
     </div>
 
-    <aside class="trivia">
-      <span class="trivia-label">Custom vim command for this page</span>
+    <details class="trivia">
+      <summary class="trivia-label">Vim shortcuts</summary>
+      <p class="shortcut-description">Custom vim command for this page</p>
       <ul>
         <li><code>:hint</code> / <code>:hi</code> Show a hint</li>
         <li><code>:retry</code> / <code>:r</code> Retry the challenge</li>
@@ -71,7 +75,7 @@ export const vimDojoMarkup = `
         <li><code>:next</code> / <code>:n</code> Go to the next challenge</li>
         <li><code>:shuffle</code> / <code>:sh</code> Jump to another challenge</li>
       </ul>
-    </aside>
+    </details>
   </div>
 
   <div class="intro">
