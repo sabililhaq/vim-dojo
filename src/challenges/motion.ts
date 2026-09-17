@@ -10,13 +10,13 @@ export const motionChallenges: Challenge[] = [
     initialContent: 'debugLogger.info("ready");',
     targetContent: 'traceLogger.info("ready");',
     initialCursor: { line: 0, column: 22 },
-    concepts: ['0', 'cw'],
+    concepts: ['0', 'ct'],
     hints: [
       'The cursor starts near the end of the line.',
-      'Move to the beginning before changing the first word.',
-      'Try `0cwtrace`.',
+      'Move to the beginning, then change up to the capital L.',
+      'Try `0ctLtrace<Esc>`.',
     ],
-    intendedMove: '0cw',
+    intendedMove: '0ctL',
   },
   {
     id: 'motion-02',

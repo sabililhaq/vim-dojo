@@ -464,3 +464,21 @@
     flex: 1 1 auto;
   }
 }
+
+.vim-dojo [hidden] {
+  display: none !important;
+}
+
+.vim-dojo .auto-advance-preference {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  color: rgb(var(--vd-gray-dark));
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.vim-dojo .auto-advance-preference input {
+  accent-color: var(--vd-accent);
+}

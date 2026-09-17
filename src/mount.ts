@@ -87,6 +87,7 @@ export function mountVimDojo(
       "[data-shuffle-button]",
     ),
     passed: dojo?.querySelector<HTMLElement>("[data-passed]"),
+    autoAdvance: dojo?.querySelector<HTMLInputElement>("[data-auto-advance]"),
     autoContinue: dojo?.querySelector<HTMLElement>("[data-auto-continue]"),
     autoContinueLabel: dojo?.querySelector<HTMLElement>(
       "[data-auto-continue-label]",
@@ -238,7 +239,8 @@ export function mountVimDojo(
   }
 
   function record(event: InteractionEvent): void {
-    if (!startedAt) startedAt = performance.now();
+    if (completed) return;
+    if (startedAt == null) startedAt = performance.now();
     events.push({ ...event, t: performance.now() });
   }
 
@@ -373,7 +375,7 @@ export function mountVimDojo(
 
   function startAutoContinue(): void {
     cancelAutoContinue();
-    if (playlist.index >= playlist.items.length - 1) return;
+    if (!els.autoAdvance?.checked || playlist.index >= playlist.items.length - 1) return;
 
     autoContinueDeadline = performance.now() + AUTO_CONTINUE_MS;
     els.autoContinue?.removeAttribute("hidden");
@@ -662,6 +664,8 @@ export function mountVimDojo(
     });
 
     editorParent.addEventListener("keydown", (event) => {
+      // Capture before Vim consumes the event or changes modes/the document.
+      updateMode();
       record({ type: "key", key: event.key, mode: currentMode, t: 0 });
       const key = event.key.toLowerCase();
       if ((event.metaKey || event.ctrlKey) && key === "z") {
@@ -670,7 +674,7 @@ export function mountVimDojo(
       if ((event.metaKey || event.ctrlKey) && key === "y")
         record({ type: "redo", t: 0 });
       queueMicrotask(updateMode);
-    });
+    }, true);
 
     editorParent.addEventListener(
       "mousedown",
@@ -687,7 +691,7 @@ export function mountVimDojo(
     editorParent.addEventListener("paste", (event) => {
       const text = event.clipboardData?.getData("text") ?? "";
       record({ type: "paste", length: text.length, t: 0 });
-    });
+    }, true);
 
     setInitialCursor(challenge);
     getCM(view)?.on("dialog", labelVimPanelInputs);
@@ -755,6 +759,23 @@ export function mountVimDojo(
 
   try {
     if (!dojo || !editorParent) throw new Error("Missing Vim Dojo root");
+
+    if (els.autoAdvance) {
+      try {
+        els.autoAdvance.checked = window.localStorage.getItem("vim-dojo:autoAdvance") !== "false";
+      } catch {
+        // Keep the default when storage is unavailable.
+      }
+      els.autoAdvance.addEventListener("change", () => {
+        try {
+          window.localStorage.setItem("vim-dojo:autoAdvance", String(els.autoAdvance!.checked));
+        } catch {
+          // The preference still applies for this session.
+        }
+        if (!els.autoAdvance!.checked) cancelAutoContinue();
+        else if (completed) startAutoContinue();
+      });
+    }
 
     playlist = createInitialPlaylist();
     registerExCommands();

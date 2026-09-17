@@ -26,6 +26,11 @@ export const vimDojoMarkup = `
         <span class="completion-mark" data-passed role="img" aria-label="Challenge not completed" title="Challenge not completed">○</span>
       </div>
 
+      <label class="auto-advance-preference">
+        <input type="checkbox" data-auto-advance checked />
+        Auto-advance after 5 seconds
+      </label>
+
       <div class="toast" data-toast hidden role="status" aria-live="polite" aria-atomic="true">
         <p data-result-message></p>
         <p class="attempt-stats">

@@ -226,3 +226,14 @@ describe('Vim engine: advanced challenges', () => {
     }
   });
 });
+
+
+describe('Vim engine: motion hints', () => {
+  for (const challenge of vimChallenges.filter((entry) => entry.category === 'motion')) {
+    it(`solves ${challenge.id} using its final hint`, () => {
+      const hint = challenge.hints!.at(-1)!;
+      const keys = [...hint.matchAll(/`([^`]+)`/g)].map((match) => match[1]).join('') + '<Esc>';
+      expect(playKeys({ content: challenge.initialContent, cursor: challenge.initialCursor!, keys })).toBe(challenge.targetContent);
+    });
+  }
+});
