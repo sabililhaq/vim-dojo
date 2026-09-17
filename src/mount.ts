@@ -103,6 +103,7 @@ export function mountVimDojo(
   let playlist: Playlist;
   let view: EditorView | undefined;
   let events: InteractionEvent[] = [];
+  let exCommandStart: number | null = null;
   let startedAt: number | null = null;
   let completedAt: number | null = null;
   let completed = false;
@@ -296,6 +297,7 @@ export function mountVimDojo(
 
   function resetTelemetry(): void {
     events = [];
+    exCommandStart = null;
     startedAt = null;
     completedAt = null;
     completed = false;
@@ -368,12 +370,27 @@ export function mountVimDojo(
     renderChallenge();
   }
 
+  function pageCommand(action: () => void): () => void {
+    return () => {
+      if (exCommandStart != null) {
+        // Remove only the submitted page command, preserving earlier practice
+        // and mouse interactions. Editing/search commands keep their telemetry.
+        events = events.filter((event, index) =>
+          index < exCommandStart! || event.type === "mouse-down" || event.type === "mouse-selection",
+        );
+        startedAt = events[0]?.t ?? null;
+        exCommandStart = null;
+      }
+      action();
+    };
+  }
+
   function registerExCommands(): void {
-    Vim.defineEx("hint", "hi", renderHint);
-    Vim.defineEx("retry", "r", renderChallenge);
-    Vim.defineEx("previous", "p", goToPrevious);
-    Vim.defineEx("next", "n", goToNext);
-    Vim.defineEx("shuffle", "sh", goToAnotherChallenge);
+    Vim.defineEx("hint", "hi", pageCommand(renderHint));
+    Vim.defineEx("retry", "r", pageCommand(renderChallenge));
+    Vim.defineEx("previous", "p", pageCommand(goToPrevious));
+    Vim.defineEx("next", "n", pageCommand(goToNext));
+    Vim.defineEx("shuffle", "sh", pageCommand(goToAnotherChallenge));
   }
 
   function startAutoContinue(): void {
@@ -683,6 +700,11 @@ export function mountVimDojo(
     editorParent.addEventListener("keydown", (event) => {
       // Capture before Vim consumes the event or changes modes/the document.
       updateMode();
+      if (!(event.target instanceof HTMLInputElement)) {
+        exCommandStart = event.key === ":" && currentMode !== "insert"
+          ? events.length
+          : null;
+      }
       record({ type: "key", key: event.key, mode: currentMode, t: 0 });
       const key = event.key.toLowerCase();
       if ((event.metaKey || event.ctrlKey) && key === "z") {

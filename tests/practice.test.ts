@@ -93,3 +93,38 @@ it('stops countdowns on history navigation and ignores other host routes', () =>
   window.dispatchEvent(new PopStateEvent('popstate'));
   expect(window.location.pathname).toBe('/about');
 });
+
+function exCommand(command: string) {
+  root.querySelector('.cm-content')!.dispatchEvent(new KeyboardEvent('keydown', { key: ':', bubbles: true, cancelable: true }));
+  const input = root.querySelector<HTMLInputElement>('.cm-vim-panel input')!;
+  for (const key of command) {
+    input.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }));
+    input.value += key;
+  }
+  input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', keyCode: 13, bubbles: true, cancelable: true }));
+}
+
+it.each(['hint', 'hi'])('scores :%s the same as the Hint button', (command) => {
+  root.querySelector<HTMLButtonElement>('[data-hint-button]')!.click();
+  solve();
+  const buttonScore = root.querySelector('[data-keystrokes]')!.textContent;
+  root.querySelector<HTMLButtonElement>('[data-retry-button]')!.click();
+  exCommand(command);
+  expect(root.querySelector('[data-hint]')?.hasAttribute('hidden')).toBe(false);
+  solve();
+  expect(root.querySelector('[data-keystrokes]')!.textContent).toBe(buttonScore);
+  expect(root.querySelector('[data-time]')!.textContent).toBe('1.00s');
+});
+
+it('keeps editing Ex commands in the score', () => {
+  exCommand('s/ab//');
+  expect(root.querySelector('.cm-content')?.textContent).toBe('c');
+  expect(root.querySelector('[data-keystrokes]')?.textContent).toBe('7 command keys · par 2');
+});
+
+it('preserves practice keys entered before a hint', () => {
+  root.querySelector('.cm-content')!.dispatchEvent(new KeyboardEvent('keydown', { key: '0', bubbles: true, cancelable: true }));
+  exCommand('hint');
+  solve();
+  expect(root.querySelector('[data-keystrokes]')?.textContent).toBe('3 command keys · par 2');
+});
