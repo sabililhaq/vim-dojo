@@ -334,4 +334,32 @@ export const operatorChallenges: Challenge[] = [
     ],
     intendedMove: '2dw',
   },
+
+  {
+    id: 'operator-18',
+    title: 'Delete all commented code',
+    description: 'Delete every full-line # comment, including commented-out debug code. Keep active code unchanged.',
+    category: 'operator',
+    difficulty: 'medium',
+    initialContent: [
+      '# sample: 1, 2, 3',
+      'def total(values):',
+      '    # print(values)',
+      '    result = sum(values)',
+      '    return result',
+    ].join('\n'),
+    targetContent: [
+      'def total(values):',
+      '    result = sum(values)',
+      '    return result',
+    ].join('\n'),
+    initialCursor: { line: 0, column: 0 },
+    concepts: [':g', '^', '\\s*', 'd'],
+    hints: [
+      'The comments are scattered across the file at different indentation levels. Match them all with a global command.',
+      'Use ^ to anchor the pattern to the start of a line, then `\\s*` for optional whitespace before #. Run d on each matching line.',
+      'Try `:g/^\\s*#/d` then Enter.',
+    ],
+    intendedMove: ':g/^\\s*#/d',
+  },
 ];

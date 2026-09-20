@@ -2,6 +2,8 @@
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { mountVimDojo } from '../src/mount';
 import { motionChallenges } from '../src/challenges/motion';
+import { operatorChallenges } from '../src/challenges/operator';
+import { EditorView } from '@codemirror/view';
 import { installJsdomLayout, playKeys } from './play-keys';
 
 let root: HTMLElement;
@@ -103,6 +105,17 @@ function exCommand(command: string) {
   }
   input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', keyCode: 13, bubbles: true, cancelable: true }));
 }
+
+it('deletes all Python comment lines using the global command hint', () => {
+  unmount();
+  const challenge = operatorChallenges.find((entry) => entry.id === 'operator-18')!;
+  unmount = mountVimDojo(root, { basePath: '/', challenges: [challenge] });
+  const command = challenge.hints!.at(-1)!.match(/`([^`]+)`/)![1]!;
+  exCommand(command.slice(1));
+  const view = EditorView.findFromDOM(root.querySelector('.cm-editor')! as HTMLElement)!;
+  expect(view.state.doc.toString()).toBe(challenge.targetContent);
+  expect(root.querySelector('[data-toast]')?.hasAttribute('hidden')).toBe(false);
+});
 
 it.each(['hint', 'hi'])('scores :%s the same as the Hint button', (command) => {
   root.querySelector<HTMLButtonElement>('[data-hint-button]')!.click();
