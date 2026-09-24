@@ -107,6 +107,7 @@ export function mountVimDojo(
   let startedAt: number | null = null;
   let completedAt: number | null = null;
   let completed = false;
+  let replacingDocument = false;
   let hintIndex = 0;
   let currentMode: VimMode = "normal";
   let isMouseSelecting = false;
@@ -417,9 +418,14 @@ export function mountVimDojo(
 
   function replaceDocument(doc: string): void {
     if (!view) return;
-    view.dispatch({
-      changes: { from: 0, to: view.state.doc.length, insert: doc },
-    });
+    replacingDocument = true;
+    try {
+      view.dispatch({
+        changes: { from: 0, to: view.state.doc.length, insert: doc },
+      });
+    } finally {
+      replacingDocument = false;
+    }
   }
 
   function challengeUrl(id: string): string {
@@ -509,6 +515,7 @@ export function mountVimDojo(
     els.previousButton?.toggleAttribute("hidden", daily);
     els.nextButton?.toggleAttribute("hidden", daily);
     els.shuffleButton?.removeAttribute("hidden");
+    els.shuffleButton?.toggleAttribute("disabled", playlist.items.length < 2);
     els.previousButton?.toggleAttribute(
       "disabled",
       playlist.index === 0 && playlist.query.mode !== "random",
@@ -655,6 +662,7 @@ export function mountVimDojo(
     docChanged: boolean;
     state: { doc: { toString(): string } };
   }): void {
+    if (replacingDocument) return;
     updateMode();
     if (!update.docChanged) return;
 

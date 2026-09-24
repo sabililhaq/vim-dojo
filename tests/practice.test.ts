@@ -141,3 +141,51 @@ it('preserves practice keys entered before a hint', () => {
   solve();
   expect(root.querySelector('[data-keystrokes]')?.textContent).toBe('3 command keys · par 2');
 });
+
+it.each(['format-02', 'format-04'])('requires editing %s on mount and retry', async (id) => {
+  const { formatChallenges } = await import('../src/challenges/format');
+  const challenge = formatChallenges.find((entry) => entry.id === id)!;
+  unmount();
+  unmount = mountVimDojo(root, { basePath: '/', challenges: [challenge] });
+  expect(root.querySelector('[data-toast]')?.hasAttribute('hidden')).toBe(true);
+  expect(window.localStorage.getItem('vim-dojo:completed')).toBeNull();
+  const editor = root.querySelector('.cm-content')!;
+  for (const key of challenge.intendedMove!) {
+    editor.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }));
+  }
+  expect(root.querySelector('[data-toast]')?.hasAttribute('hidden')).toBe(false);
+  expect(window.localStorage.getItem('vim-dojo:completed')).toContain(id);
+  root.querySelector<HTMLButtonElement>('[data-retry-button]')!.click();
+  expect(root.querySelector('[data-toast]')?.hasAttribute('hidden')).toBe(true);
+  const view = EditorView.findFromDOM(root.querySelector('.cm-editor')! as HTMLElement)!;
+  expect(view.state.doc.toString()).toBe(challenge.initialContent);
+});
+
+it('does not award completion from a programmatic challenge reset', () => {
+  unmount();
+  const challenge = { ...motionChallenges[0]!, initialContent: 'same', targetContent: 'same' };
+  unmount = mountVimDojo(root, { basePath: '/', challenges: [challenge] });
+  root.querySelector<HTMLButtonElement>('[data-retry-button]')!.click();
+  expect(root.querySelector('[data-toast]')?.hasAttribute('hidden')).toBe(true);
+  expect(window.localStorage.getItem('vim-dojo:completed')).toBeNull();
+});
+
+it('disables shuffle for the daily kata', () => {
+  unmount();
+  window.history.replaceState(null, '', '/?mode=daily');
+  unmount = mountVimDojo(root, { basePath: '/' });
+  expect(root.querySelector<HTMLButtonElement>('[data-shuffle-button]')!.disabled).toBe(true);
+});
+
+it('keeps random mode through category navigation and remounting', () => {
+  unmount();
+  window.history.replaceState(null, '', '/?mode=random');
+  unmount = mountVimDojo(root, { basePath: '/' });
+  root.querySelector<HTMLAnchorElement>('[data-categories] a[href*="category=motion"]')!.click();
+  expect(new URLSearchParams(window.location.search).get('mode')).toBe('random');
+  const url = window.location.href;
+  unmount();
+  unmount = mountVimDojo(root, { basePath: '/' });
+  expect(window.location.href).toBe(url);
+  expect(root.querySelector('[data-category]')?.textContent).toContain('motion');
+});

@@ -90,7 +90,7 @@ describe("playlist query", () => {
         category: "motion",
         challenge: "motion-02",
       }),
-    ).toBe("/vim?category=motion&challenge=motion-02");
+    ).toBe("/vim?mode=random&category=motion&challenge=motion-02");
     expect(
       playlistUrl("/vim", {
         mode: "daily",
@@ -147,7 +147,7 @@ describe("category play", () => {
 });
 
 describe("random review", () => {
-  it("keeps solved cases in a reshuffled list and restores its order", () => {
+  it("starts with unsolved cases and preserves the session order", () => {
     const first = createPlaylist({
       challenges: sample,
       query: { mode: "random", category: null, challenge: null },
@@ -156,11 +156,10 @@ describe("random review", () => {
     });
 
     expect(first.items.map((challenge) => challenge.id)).toEqual([
-      "motion-02",
       "operator-01",
-      "motion-01",
+      "motion-02",
     ]);
-    expect(first.shuffleIds).toEqual(["motion-02", "operator-01", "motion-01"]);
+    expect(first.shuffleIds).toEqual(["operator-01", "motion-02"]);
 
     const restored = createPlaylist({
       challenges: sample,
@@ -170,11 +169,10 @@ describe("random review", () => {
     });
 
     expect(restored.items.map((challenge) => challenge.id)).toEqual([
-      "motion-02",
       "operator-01",
-      "motion-01",
+      "motion-02",
     ]);
-    expect(restored.index).toBe(0);
+    expect(restored.index).toBe(1);
   });
 
   it("reshuffles only when asked, and shuffles the full set once everything is done", () => {
@@ -310,4 +308,12 @@ describe("playlist helpers", () => {
       "operator-01",
     ]);
   });
+});
+
+it('preserves every mode when a playlist URL is parsed again', () => {
+  for (const mode of ['sequence', 'random', 'daily'] as const) {
+    const query = { mode, category: null, challenge: 'motion-01' };
+    const url = new URL(playlistUrl('/vim', query), 'http://localhost');
+    expect(parseQuery(url.search, categories)).toEqual(query);
+  }
 });

@@ -4,7 +4,7 @@ export type ContentSpan = {
 };
 
 export function normalizeChallengeContent(content: string): string {
-  return content.replace(/\r\n?/g, '\n').trim();
+  return content.replace(/\r\n?/g, '\n');
 }
 
 export function changedSpan(

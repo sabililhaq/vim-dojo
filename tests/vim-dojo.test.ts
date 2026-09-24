@@ -33,6 +33,7 @@ describe("Vim Dojo", () => {
       expect(challenge.title.length).toBeGreaterThan(0);
       expect(challenge.description.length).toBeGreaterThan(0);
       expect(challenge.initialContent).not.toBe(challenge.targetContent);
+      expect(isChallengeComplete(challenge.initialContent, challenge.targetContent)).toBe(false);
       expect(challenge.hints?.length).toBeGreaterThan(0);
       expect(challenge.concepts?.length).toBeGreaterThan(0);
       expect(challenge.intendedMove).toBeTruthy();
@@ -200,8 +201,8 @@ describe("Vim Dojo", () => {
     expect(styles).toContain(".vim-dojo .playlist-row");
   });
 
-  it("validates completed content after normalizing line endings and trim", () => {
-    expect(isChallengeComplete("const x = 1;\r\n", "const x = 1;")).toBe(true);
+  it("validates completed content after normalizing line endings while preserving whitespace", () => {
+    expect(isChallengeComplete("const x = 1;\r\n", "const x = 1;\n")).toBe(true);
     expect(isChallengeComplete("const x = 2;", "const x = 1;")).toBe(false);
   });
 
@@ -268,8 +269,8 @@ describe("Vim Dojo", () => {
     ).toBe("vim");
   });
 
-  it("treats blank and whitespace-only buffers as the same empty solution", () => {
-    expect(isChallengeComplete("  \n", "")).toBe(true);
+  it("requires an empty buffer for an empty solution", () => {
+    expect(isChallengeComplete("  \n", "")).toBe(false);
     expect(isChallengeComplete("", "x")).toBe(false);
     expect(contentDiffSize("same", "same")).toBe(1);
   });
