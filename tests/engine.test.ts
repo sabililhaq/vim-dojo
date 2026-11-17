@@ -32,6 +32,7 @@ const advancedReplays: Record<string, string> = {
   'operator-15': 'guiw',
   'operator-16': '2dd',
   'operator-17': '2dw',
+  'operator-19': 'gUiw',
   'text-object-10': 'di(',
   'text-object-11': 'da"',
 };
@@ -207,6 +208,126 @@ describe('Vim engine: formatting', () => {
         keys: '==',
       }),
     ).toBe(['function start() {', '  return boot();', '}'].join('\n'));
+  });
+});
+
+describe('Vim engine: case conversion', () => {
+  it('converts text to uppercase using gU with text objects and motions', () => {
+    expect(
+      playKeys({
+        content: 'export const api_url = "/v1";',
+        cursor: { line: 0, column: 13 },
+        keys: 'gUiw',
+      }),
+    ).toBe('export const API_URL = "/v1";');
+
+    expect(
+      playKeys({
+        content: 'const max retries = 5;',
+        cursor: { line: 0, column: 6 },
+        keys: 'gUw',
+      }),
+    ).toBe('const MAX retries = 5;');
+
+    expect(
+      playKeys({
+        content: 'const path = "/api/v1";',
+        cursor: { line: 0, column: 14 },
+        keys: 'gU$',
+      }),
+    ).toBe('const path = "/API/V1";');
+
+    expect(
+      playKeys({
+        content: ['debug: server listening', 'port: 3000'].join('\n'),
+        cursor: { line: 0, column: 2 },
+        keys: 'gUU',
+      }),
+    ).toBe(['DEBUG: SERVER LISTENING', 'port: 3000'].join('\n'));
+  });
+
+  it('converts text to lowercase using gu with text objects and motions', () => {
+    expect(
+      playKeys({
+        content: 'export const API_URL = "/v1";',
+        cursor: { line: 0, column: 13 },
+        keys: 'guiw',
+      }),
+    ).toBe('export const api_url = "/v1";');
+
+    expect(
+      playKeys({
+        content: 'const MAX RETRIES = 5;',
+        cursor: { line: 0, column: 6 },
+        keys: 'guw',
+      }),
+    ).toBe('const max RETRIES = 5;');
+
+    expect(
+      playKeys({
+        content: 'const PATH = "/API/V1";',
+        cursor: { line: 0, column: 14 },
+        keys: 'gu$',
+      }),
+    ).toBe('const PATH = "/api/v1";');
+
+    expect(
+      playKeys({
+        content: ['FATAL: SERVER DOWN', 'port: 3000'].join('\n'),
+        cursor: { line: 0, column: 2 },
+        keys: 'guu',
+      }),
+    ).toBe(['fatal: server down', 'port: 3000'].join('\n'));
+  });
+
+  it('converts visual selections using uppercase and lowercase operators (gU, gu, U, u)', () => {
+    expect(
+      playKeys({
+        content: 'const mode = "production";',
+        cursor: { line: 0, column: 14 },
+        keys: 'viwU',
+      }),
+    ).toBe('const mode = "PRODUCTION";');
+
+    expect(
+      playKeys({
+        content: 'const mode = "production";',
+        cursor: { line: 0, column: 14 },
+        keys: 'viwgU',
+      }),
+    ).toBe('const mode = "PRODUCTION";');
+
+    expect(
+      playKeys({
+        content: 'const mode = "PRODUCTION";',
+        cursor: { line: 0, column: 14 },
+        keys: 'viwu',
+      }),
+    ).toBe('const mode = "production";');
+
+    expect(
+      playKeys({
+        content: 'const mode = "PRODUCTION";',
+        cursor: { line: 0, column: 14 },
+        keys: 'viwgu',
+      }),
+    ).toBe('const mode = "production";');
+
+    expect(
+      playKeys({
+        content: ['first line', 'second line'].join('\n'),
+        cursor: { line: 0, column: 0 },
+        keys: 'VU',
+      }),
+    ).toBe(['FIRST LINE', 'second line'].join('\n'));
+
+    expect(
+      playKeys({
+        content: ['FIRST LINE', 'second line'].join('\n'),
+        cursor: { line: 0, column: 0 },
+        keys: 'Vu',
+      }),
+    ).toBe(['first line', 'second line'].join('\n'));
   });
 });
 

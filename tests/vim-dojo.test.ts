@@ -458,6 +458,7 @@ describe("Vim Dojo", () => {
     expect(byId["motion-14"]?.intendedMove).toBe("3wcw");
     expect(byId["operator-16"]?.intendedMove).toBe("2dd");
     expect(byId["operator-17"]?.intendedMove).toBe("2dw");
+    expect(byId["operator-19"]?.intendedMove).toBe("gUiw");
   });
 });
 
@@ -1337,10 +1338,11 @@ describe("Vim Dojo learning", () => {
     expect(challenge?.targetContent.startsWith("final")).toBe(true);
   });
 
-  it("joins, duplicates, and lowercases with everyday operators", () => {
+  it("joins, duplicates, and changes case with everyday operators", () => {
     const join = vimChallenges.find((entry) => entry.id === "operator-13");
     const duplicate = vimChallenges.find((entry) => entry.id === "operator-14");
     const lower = vimChallenges.find((entry) => entry.id === "operator-15");
+    const upper = vimChallenges.find((entry) => entry.id === "operator-19");
 
     expect(join?.targetContent).toBe("import { load } from './db';");
     expect(
@@ -1349,6 +1351,7 @@ describe("Vim Dojo learning", () => {
         .filter((line) => line.includes("retries")),
     ).toHaveLength(2);
     expect(lower?.targetContent).toContain("api_url");
+    expect(upper?.targetContent).toContain("API_URL");
   });
 
   it("deletes inside parens and around quotes", () => {

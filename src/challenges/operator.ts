@@ -362,4 +362,21 @@ export const operatorChallenges: Challenge[] = [
     ],
     intendedMove: ':g/^\\s*#/d',
   },
+  {
+    id: 'operator-19',
+    title: 'Uppercase a word',
+    description: 'Turn api_url into API_URL.',
+    category: 'operator',
+    difficulty: 'medium',
+    initialContent: 'export const api_url = "/v1";',
+    targetContent: 'export const API_URL = "/v1";',
+    initialCursor: { line: 0, column: 13 },
+    concepts: ['gU', 'iw'],
+    hints: [
+      'The cursor starts on the identifier to uppercase.',
+      'Uppercase the inner word without retyping it.',
+      'Try `gUiw`.',
+    ],
+    intendedMove: 'gUiw',
+  },
 ];
